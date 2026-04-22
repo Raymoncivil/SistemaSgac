@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión de Actividades</title>
+    <link rel="stylesheet" href="/frontend/styles.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>📅 Gestor de Actividades - Abril 2026</h1>
+            <div id="auth-section">
+                <button id="login-btn" class="btn-primary" onclick="(function(){const m=document.getElementById('login-modal'); if(m){ m.style.display='block'; m.classList.remove('hidden'); }})();">🔐 Iniciar Sesión</button>
+                <button id="logout-btn" class="btn-danger hidden">🚪 Cerrar Sesión</button>
+            </div>
+        </header>
+        
+        <div id="login-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>🔐 Iniciar Sesión</h2>
+                <form id="login-form">
+                    <input type="text" id="rut" placeholder="RUT (ej: 12345678-9)" required>
+                    <input type="password" id="password" placeholder="Contraseña" required>
+                    <button type="submit" class="btn-primary">Entrar</button>
+                </form>
+            </div>
+        </div>
+        
+        <div id="calendar"></div>
+        
+        <div id="activity-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2 id="modal-title">📌 Nueva Actividad</h2>
+                <form id="activity-form">
+                    <input type="text" id="title" placeholder="Título (sin emojis, se agregan automáticamente)" required>
+                    <textarea id="description" placeholder="Descripción detallada"></textarea>
+                    <label for="date" class="sr-only">Fecha</label>
+                    <input type="date" id="date" name="date" required>
+                    <label for="priority" class="sr-only">Prioridad</label>
+                    <select id="priority" name="priority">
+                        <option value="">Sin prioridad</option>
+                        <option value="1">🔴 Alta</option>
+                        <option value="2">🟡 Media</option>
+                        <option value="3">🟢 Baja</option>
+                    </select>
+                    <div id="checklist-container">
+                        <label>✅ Checklist (opcional):</label>
+                        <input type="text" class="checklist-item" placeholder="Tarea 1">
+                        <input type="text" class="checklist-item" placeholder="Tarea 2">
+                        <input type="text" class="checklist-item" placeholder="Tarea 3">
+                    </div>
+                    <label for="image" class="sr-only">Imagen (opcional)</label>
+                    <input type="file" id="image" name="image" accept="image/*">
+                    <button type="submit" class="btn-primary">💾 Guardar</button>
+                </form>
+            </div>
+        </div>
+        
+        <div id="priority-popup" class="popup hidden">
+            <h3>⚠️ Actividades Prioritarias</h3>
+            <ul id="priority-list"></ul>
+            <small>Se mostrará una cuenta regresiva aquí</small>
+        </div>
+    </div>
+    
+    <script src="/frontend/app.js"></script>
+</body>
+</html>
