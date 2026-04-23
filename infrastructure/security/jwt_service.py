@@ -28,15 +28,16 @@ class JWTService(IAuthService):
         return _verify_password(plain_password, hashed)
 
     def create_token(self, user_id: str, rut: str, full_name: str, role: str) -> str:
-        now = datetime.utcnow()
-        expire = now + timedelta(minutes=self.expire_minutes)
+        import time
+        now_ts = int(time.time())
+        expire_ts = now_ts + (self.expire_minutes * 60)
         payload = {
             "sub": str(user_id),
             "rut": rut,
             "name": full_name,
             "role": role,
-            "iat": int(now.timestamp()),
-            "exp": int(expire.timestamp()),
+            "iat": now_ts,
+            "exp": expire_ts,
         }
         return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
 

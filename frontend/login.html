@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - SGAC</title>
+    <!-- Referencia al CSS recién creado -->
+    <link rel="stylesheet" href="/frontend/css/styles.css">
+</head>
+<body data-theme="light">
+    <div class="login-container">
+        
+        <!-- Columna Izquierda: Ilustración SVG Corporate Memphis -->
+        <div class="login-illustration">
+            <svg width="400" height="400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+                <!-- Fondo y formas abstractas animadas -->
+                <circle cx="200" cy="200" r="150" fill="#818cf8" opacity="0.3" class="login-svg-shape" style="animation-duration: 8s;" />
+                <path d="M50 300 Q150 200 350 300 L350 400 L50 400 Z" fill="#4f46e5" opacity="0.5" />
+                <rect x="280" y="80" width="60" height="60" rx="15" fill="#14b8a6" class="login-svg-shape" style="animation-delay: 1s;" />
+                <polygon points="100,150 130,100 160,150" fill="#f59e0b" class="login-svg-shape" style="animation-delay: 2s; animation-duration: 5s;" />
+                
+                <!-- Figura Humana Simplificada -->
+                <!-- Piernas / Cuerpo inferior -->
+                <path d="M160 250 Q200 350 240 250" fill="none" stroke="#1e293b" stroke-width="40" stroke-linecap="round" />
+                <!-- Torso sobredimensionado -->
+                <path d="M200 150 L200 280" stroke="#6366f1" stroke-width="60" stroke-linecap="round" />
+                <!-- Cabeza plana y abstracta -->
+                <circle cx="200" cy="110" r="35" fill="#fcd34d" />
+                <!-- Brazos curvados -->
+                <path d="M180 180 Q120 220 140 280" fill="none" stroke="#6366f1" stroke-width="20" stroke-linecap="round" />
+                <path d="M220 180 Q280 150 300 200" fill="none" stroke="#6366f1" stroke-width="20" stroke-linecap="round" />
+                <!-- Elemento abstracto en mano (como un calendario/tarjeta) -->
+                <rect x="290" y="170" width="40" height="30" rx="5" fill="#ffffff" />
+                <line x1="295" y1="180" x2="325" y2="180" stroke="#cbd5e1" stroke-width="3" />
+                <line x1="295" y1="190" x2="315" y2="190" stroke="#cbd5e1" stroke-width="3" />
+            </svg>
+        </div>
+
+        <!-- Columna Derecha: Formulario -->
+        <div class="login-form-wrapper">
+            <h1>Bienvenido al SGAC</h1>
+            <p>Ingresa tus credenciales para acceder a tu calendario.</p>
+            
+            <form id="login-form">
+                <!-- Se usa staggered fade-in desde CSS vía nth-child -->
+                <div class="form-group">
+                    <label for="rut">RUT</label>
+                    <input type="text" id="rut" name="rut" placeholder="Ej: 12345678-9" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="btn-primary" id="login-btn" onclick="doLogin()">Iniciar Sesión</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts de la app -->
+    <script src="/frontend/js/api.js"></script>
+    <script>
+        // Formateo automático de RUT (ej: 12345678-9) mientras se escribe
+        const rutInput = document.getElementById('rut');
+        rutInput.addEventListener('input', function(e) {
+            let valor = e.target.value.replace(/[^0-9kK]/g, '');
+            if (valor.length > 1) {
+                const cuerpo = valor.slice(0, -1);
+                const dv = valor.slice(-1).toLowerCase();
+                e.target.value = cuerpo + '-' + dv;
+            } else {
+                e.target.value = valor;
+            }
+        });
+
+        function doLogin() {
+            console.log("Botón presionado. window.login es:", typeof window.login);
+            const rutVal = document.getElementById('rut').value;
+            const passVal = document.getElementById('password').value;
+            
+            if (!rutVal || !passVal) {
+                alert("Por favor completa el RUT y la Contraseña.");
+                return;
+            }
+            
+            if(typeof window.login === 'function') {
+                window.login(rutVal, passVal);
+            } else {
+                alert("Error crítico: El archivo api.js no se ha cargado correctamente. Verifica la consola del navegador (F12).");
+            }
+        }
+        
+        // Exponemos una función global para que api.js pueda disparar la animación de error
+        window.triggerLoginError = function() {
+            const formGroups = document.querySelectorAll('.form-group');
+            formGroups.forEach(g => {
+                g.classList.remove('error-shake');
+                void g.offsetWidth; // trigger reflow
+                g.classList.add('error-shake');
+            });
+        };
+    </script>
+</body>
+</html>
