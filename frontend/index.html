@@ -3,97 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SGAC - Calendario de Actividades</title>
-    <!-- CSS asimétrico y tipografías -->
+    <title>SGAC - Dashboard</title>
+    <!-- Estilos CSS -->
     <link rel="stylesheet" href="/frontend/css/styles.css">
+    
 </head>
 <body data-theme="light">
+    
     <div class="app-container">
         
-        <!-- Header Principal -->
-        <header>
-            <h1>📅 SGAC - Abril 2026</h1>
-            <div class="user-controls">
-                <!-- Toggle para el Modo Claro/Oscuro -->
-                <button id="theme-toggle" class="btn-icon" aria-label="Cambiar Tema" title="Cambiar Tema">🌓</button>
-                <span id="user-name" style="font-weight:600; color:var(--text-main);"></span>
-                <!-- Botón Cerrar Sesión -->
-                <button id="btn-logout" class="btn-icon" aria-label="Cerrar Sesión" title="Cerrar Sesión">🚪</button>
+        <!-- ZONA IZQUIERDA: Sidebar -->
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <!-- Icono SVG de Calendario Moderno -->
+                    
+                        <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke="currentColor" stroke-width="2" fill="none"/>
+                        <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <span>SGAC</span>
+                </div>
+                <button id="theme-toggle" class="theme-toggle" aria-label="Cambiar Tema" title="Cambiar Tema">🌓</button>
             </div>
-        </header>
 
-        <!-- Banner de Cuenta Regresiva (Oculto por defecto, activado por JS) -->
-        <div id="countdown-banner" class="countdown-banner hidden"></div>
+            <!-- Cuenta Regresiva de "Hoy" -->
+            <div id="countdown-banner" class="countdown-pill hidden">
+                <!-- Se llena mediante JS -->
+            </div>
 
-        <!-- Barra de Filtros por Prioridad -->
-        <div class="priority-filter">
-            <button class="filter-chip active" data-priority="all">Todas</button>
-            <button class="filter-chip" data-priority="1">🔴 Alta</button>
-            <button class="filter-chip" data-priority="2">🟡 Media</button>
-            <button class="filter-chip" data-priority="3">🟢 Baja</button>
-        </div>
+            <!-- Filtros de Prioridad Verticales -->
+            <div class="priority-filters">
+                <button class="filter-btn active" data-priority="all">
+                    <span class="priority-dot dot-all"></span>
+                    Todas las actividades
+                </button>
+                <button class="filter-btn" data-priority="1">
+                    <span class="priority-dot dot-high"></span>
+                    Prioridad Alta
+                </button>
+                <button class="filter-btn" data-priority="2">
+                    <span class="priority-dot dot-med"></span>
+                    Prioridad Media
+                </button>
+                <button class="filter-btn" data-priority="3">
+                    <span class="priority-dot dot-low"></span>
+                    Prioridad Baja
+                </button>
+            </div>
 
-        <!-- Contenedor Base de la Cuadrícula -->
-        <div id="calendar-grid" class="calendar-grid">
-            <!-- Generado dinámicamente desde calendar.js -->
-        </div>
+            <!-- Footer del Sidebar: Usuario y Logout -->
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar" id="user-avatar-initial">U</div>
+                    <span class="user-name" id="user-name">Usuario</span>
+                </div>
+                <button id="btn-logout" class="btn-logout" aria-label="Cerrar Sesión">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span>Cerrar sesión</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ZONA DERECHA: Área Principal -->
+        <main id="main-content">
+            <header class="main-header">
+                <h1>Abril 2026</h1>
+                <span class="header-stats tabular-nums" id="month-stats">Cargando...</span>
+            </header>
+
+            <div class="calendar-wrapper">
+                <div id="calendar-grid" class="calendar-grid">
+                    <!-- Los Días y Celdas se inyectarán vía JS -->
+                </div>
+            </div>
+        </main>
         
-    </div> <!-- Fin app-container -->
+    </div>
 
-    <!-- Panel Modal Asimétrico (Glassmorfismo) -->
-    <div id="modal-overlay" class="modal-overlay">
-        <div class="modal-panel">
-            <div class="modal-header">
+    <!-- DRAWER LATERAL (Panel de Día Deslizable) -->
+    <div id="drawer-overlay">
+        <aside id="drawer-panel">
+            <div class="drawer-header">
                 <h2 id="modal-day-title">Actividades</h2>
-                <button class="modal-close" aria-label="Cerrar Panel" onclick="window.closeModal()">&times;</button>
+                <button class="btn-close-drawer" aria-label="Cerrar Panel" onclick="window.closeModal()">&times;</button>
             </div>
             
-            <!-- Lista de actividades del día -->
-            <div id="modal-content-list">
-                <!-- Rellenado dinámicamente -->
+            <div id="modal-content-list" class="drawer-content">
+                <!-- Tarjetas de actividades inyectadas por JS -->
+            </div>
+        </aside>
+    </div>
+
+    <!-- POPUP DESTACADO (Urgencias) -->
+    <div id="popup-overlay" class="popup-overlay">
+        <div class="popup-card">
+            <div class="popup-strip"></div>
+            <div class="popup-content">
+                <div class="popup-emoji">⚠️</div>
+                <h3 class="popup-title" id="popup-title">Actividad Destacada</h3>
+                <button class="btn-primary" onclick="document.getElementById('popup-overlay').classList.remove('active')">Entendido</button>
             </div>
         </div>
     </div>
 
-    <!-- Scripts del Proyecto en Vanilla JS -->
-    <script src="/frontend/js/api.js"></script>
-    <script src="/frontend/js/notifications.js"></script>
-    <script src="/frontend/js/calendar.js"></script>
+    <!-- CONTENEDOR DE TOASTS (Notificaciones) -->
+    <div id="toast-container" class="toast-container"></div>
 
-    <!-- Script de Inicialización y Arranque -->
+    <!-- Scripts con cache-busting -->
+    <script src="/frontend/js/api.js?v=999"></script>
+    <script src="/frontend/js/notifications.js?v=999"></script>
+    <script src="/frontend/js/calendar.js?v=999"></script>
+
+    <!-- Script de Inicialización -->
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            // Manejador del Tema (Modo Claro/Oscuro)
+            // Manejo del Tema
             const themeBtn = document.getElementById('theme-toggle');
             themeBtn.addEventListener('click', () => {
                 const current = document.body.getAttribute('data-theme');
                 document.body.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
             });
 
-            // Manejador del Logout
+            // Manejo del Logout
             const logoutBtn = document.getElementById('btn-logout');
             logoutBtn.addEventListener('click', () => {
-                window.logout();
+                if(window.logout) window.logout();
             });
 
             try {
-                // 1. Obtener datos iniciales (Si el token expiró, api.js redirigirá al login automáticamente)
+                // Verificar que hay sesión activa antes de continuar
+                const token = sessionStorage.getItem('sgac_token');
+                if (!token) {
+                    window.location.href = '/frontend/login.html';
+                    return;
+                }
+
+                // 1. Cargar Datos
                 const activities = await window.getAprilActivities();
                 
-                // 2. Renderizar Calendario y asociar eventos del filtro
-                window.renderCalendar(activities);
-                window.initPriorityFilter();
+                // Rellenar estadísticas rápidas
+                const statsEl = document.getElementById('month-stats');
+                if(statsEl) statsEl.textContent = `${activities.length} actividades planificadas`;
                 
-                // 3. Activar funciones de tiempo (Cuenta regresiva y Popups)
-                window.startCountdown(activities);
-                window.showDailyPopup(activities);
-                window.checkHourlyAlerts(activities);
+                // 2. Renderizar Cuadrícula
+                if(window.renderCalendar) window.renderCalendar(activities);
+                if(window.initPriorityFilter) window.initPriorityFilter();
                 
-                // 4. Iniciar el Polling para verificar alertas nuevas o caducadas cada minuto
-                window.startNotificationPolling(window.getAprilActivities);
+                // 3. Funciones de Alertas y Tiempo
+                if(window.startCountdown) window.startCountdown(activities);
+                if(window.showDailyPopup) window.showDailyPopup(activities);
+                if(window.checkHourlyAlerts) window.checkHourlyAlerts(activities);
+                if(window.startNotificationPolling) window.startNotificationPolling(window.getAprilActivities);
                 
             } catch (err) {
-                console.error("Error inicializando SGAC. Posiblemente requiere autenticación.", err);
+                console.error("Error inicializando el Dashboard SGAC:", err);
             }
         });
     </script>

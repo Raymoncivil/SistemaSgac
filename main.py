@@ -1,84 +1,47 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
+import traceback
 
 from presentation.api.routers import auth, activities, admin
 from infrastructure.database.connection import engine
 from infrastructure.database.models import Base
-from domain.exceptions import DomainException
 from config import settings
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Contexto de ciclo de vida de la aplicación FastAPI.
-    - Startup: crea tablas
-    - Shutdown: cierra la conexión
-    """
-    # Startup
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    print("✓ Tablas de base de datos creadas/verificadas")
-    
+    print("[OK] Servidor listo")
     yield
-    
-    # Shutdown
     await engine.dispose()
-    print("✓ Conexión a base de datos cerrada")
 
+app = FastAPI(title="SGAC", lifespan=lifespan)
 
-app = FastAPI(
-    title="Sistema de Gestión de Actividades",
-    version="1.0.0",
-    description="Sistema para gestionar actividades de abril con calendarios",
-    lifespan=lifespan
-)
-
-# CORS - Solo orígenes confiables
+# CORRECCIÓN DE CORS: No puede ser "*" si credentials es True
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.allowed_origins,
-    allow_credentials=False,
-    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
-    expose_headers=[],
-    max_age=600,
+    allow_origins=["http://localhost:8000", "http://127.0.0.1:8000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Incluir routers
-app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
-app.include_router(activities.router, prefix="/api/activities", tags=["activities"])
-app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
+app.include_router(auth.router, prefix="/api/auth")
+app.include_router(activities.router, prefix="/api/activities")
+app.include_router(admin.router, prefix="/api/admin")
 
-FRONTEND_DIR = Path(__file__).resolve().parent / "frontend"
-if FRONTEND_DIR.exists():
-    app.mount("/frontend", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+ROOT = Path(__file__).resolve().parent
+app.mount("/frontend", StaticFiles(directory=str(ROOT / "frontend"), html=True))
 
-UPLOADS_DIR = Path(settings.upload_dir).resolve()
-if UPLOADS_DIR.exists():
-    app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
-
-
-@app.exception_handler(DomainException)
-async def domain_exception_handler(_, exc: DomainException):
-    return JSONResponse(
-        status_code=400,
-        content={"detail": str(exc)},
-    )
-
+@app.exception_handler(Exception)
+async def global_handler(request: Request, exc: Exception):
+    print(f"ERROR: {exc}")
+    return JSONResponse(status_code=500, content={"detail": str(exc)})
 
 @app.get("/")
-def read_root():
-    index_path = FRONTEND_DIR / "index.html"
-    if index_path.exists():
-        return FileResponse(str(index_path))
-    return {"message": "Bienvenido al Sistema de Gestión de Actividades", "version": "1.0.0"}
-
-
-@app.get("/health")
-def health_check():
-    return {"status": "healthy", "service": "SGAC API"}
+async def root():
+    return FileResponse(str(ROOT / "frontend" / "index.html"))

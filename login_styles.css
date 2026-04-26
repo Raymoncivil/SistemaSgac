@@ -1,0 +1,68 @@
+/* ==========================================================================
+   Componentes: Login Espec├¡fico
+   ========================================================================== */
+.login-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+}
+
+.login-illustration {
+    background: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Patrones SVG / Animaciones en Login */
+.login-svg-shape {
+    animation: float 6s ease-in-out infinite;
+}
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+}
+
+.login-form-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 4rem;
+    max-width: 500px;
+    margin: 0 auto;
+    width: 100%;
+    background: var(--bg-color);
+}
+
+.login-form-wrapper h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.login-form-wrapper p {
+    color: var(--text-muted);
+    margin-bottom: 3rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    animation: fadeIn 0.5s ease forwards;
+    opacity: 0;
+}
+.form-group:nth-child(1) { animation-delay: 0.1s; }
+.form-group:nth-child(2) { animation-delay: 0.2s; }
+.form-group:nth-child(3) { animation-delay: 0.3s; }
+
+.form-group label {
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.error-shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+

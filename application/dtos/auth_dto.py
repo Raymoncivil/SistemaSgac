@@ -3,8 +3,11 @@ application/dtos/auth_dto.py — Data Transfer Objects para autenticación.
 """
 
 from dataclasses import dataclass
-from typing import Optional
 
+
+# =========================
+# LOGIN
+# =========================
 
 @dataclass
 class LoginRequestDTO:
@@ -24,11 +27,31 @@ class LoginResponseDTO:
     role: str
 
 
-@dataclass
-class LogoutRequestDTO:
-    """DTO para solicitud de logout."""
-    pass
+# =========================
+# REGISTER 🔥
+# =========================
 
+@dataclass
+class RegisterRequestDTO:
+    """DTO para registro de usuario."""
+    rut: str
+    full_name: str
+    password: str
+    role: str
+
+
+@dataclass
+class RegisterResponseDTO:
+    """DTO respuesta de registro."""
+    user_id: str
+    rut: str
+    full_name: str
+    role: str
+
+
+# =========================
+# TOKEN
+# =========================
 
 @dataclass
 class TokenPayloadDTO:
@@ -39,3 +62,13 @@ class TokenPayloadDTO:
     role: str
     exp: int
     iat: int
+
+
+# =========================
+# LOGOUT
+# =========================
+
+@dataclass
+class LogoutRequestDTO:
+    """DTO para solicitud de logout."""
+    pass

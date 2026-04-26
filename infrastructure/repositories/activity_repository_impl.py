@@ -1,3 +1,4 @@
+
 """
 infrastructure/repositories/activity_repository_impl.py — Implementación concreta del repositorio de actividades.
 """
@@ -92,7 +93,13 @@ class ActivityRepositoryImpl(IActivityRepository):
         if model.checklist_json:
             try:
                 checklist_data = json.loads(model.checklist_json)
-                checklist = [ChecklistItem(text=item.get("text", ""), done=item.get("done", False)) for item in checklist_data]
+                checklist = [
+                    ChecklistItem(
+                        text=item.get("text", ""),
+                        done=item.get("done", False)
+                    )
+                    for item in checklist_data
+                ]
             except (ValueError, TypeError):
                 checklist = []
 

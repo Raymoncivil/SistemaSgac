@@ -10,7 +10,7 @@ from uuid import UUID
 
 @dataclass
 class ChecklistItemDTO:
-    """DTO para un ítem del checklist."""
+    """DTO para un item del checklist."""
     text: str
     done: bool = False
 
@@ -23,7 +23,7 @@ class ActivityCreateDTO:
     priority_id: int
     description: Optional[str] = None
     emoji: Optional[str] = None
-    checklist: List[ChecklistItemDTO] = field(default_factory=list)
+    checklist: List = field(default_factory=list)
     image_path: Optional[str] = None
 
 
@@ -35,23 +35,26 @@ class ActivityUpdateDTO:
     priority_id: Optional[int] = None
     emoji: Optional[str] = None
     completed: Optional[bool] = None
-    checklist: Optional[List[ChecklistItemDTO]] = None
+    checklist: Optional[List] = None
 
 
 @dataclass
 class ActivityResponseDTO:
     """DTO para responder una actividad (output al cliente)."""
-    id: UUID
-    user_id: UUID
+    id: str
+    user_id: str
     day_of_april: int
     title: str
     description: Optional[str]
     emoji: Optional[str]
     priority_id: int
     priority_name: str
+    priority_color: str
     completed: bool
     has_image: bool
     image_path: Optional[str]
     checklist: List[ChecklistItemDTO]
-    created_at: str  # ISO format
-    updated_at: str  # ISO format
+    checklist_done: int
+    checklist_total: int
+    created_at: str
+    updated_at: str

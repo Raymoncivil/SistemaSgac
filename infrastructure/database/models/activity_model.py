@@ -4,7 +4,6 @@ infrastructure/database/models/activity_model.py — Modelo ORM de actividades.
 
 from sqlalchemy import Column, String, Text, Boolean, SmallInteger, DateTime, ForeignKey, Integer
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-from sqlalchemy.orm import relationship
 from . import Base
 import uuid
 
@@ -25,5 +24,4 @@ class ActivityModel(Base):
     checklist_json = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), nullable=False)
     updated_at = Column(DateTime(timezone=True), nullable=False)
-
-    user = relationship("UserModel", lazy="select")
+    # relationship eliminado — user_id FK es suficiente para las queriesc

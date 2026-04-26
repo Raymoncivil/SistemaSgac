@@ -4,7 +4,7 @@ Orquesta la lógica de negocio para crear una nueva actividad.
 """
 
 from uuid import UUID, uuid4
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List
 
 from domain.entities.activity import Activity, ChecklistItem
@@ -87,8 +87,8 @@ class CreateActivityUseCase:
                     ChecklistItem(text=item.text, done=item.done)
                     for item in activity_dto.checklist
                 ],
-                created_at=datetime.now(),
-                updated_at=datetime.now()
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc)
             )
         except ValueError as e:
             raise ValidationError(str(e))
@@ -103,14 +103,15 @@ class CreateActivityUseCase:
     def _to_response_dto(activity: Activity) -> ActivityResponseDTO:
         """Convierte entidad Activity a DTO para respuesta."""
         return ActivityResponseDTO(
-            id=activity.id,
-            user_id=activity.user_id,
+            id=str(activity.id),
+            user_id=str(activity.user_id),
             day_of_april=activity.day_of_april,
             title=activity.title,
-            description=activity.description,
-            emoji=activity.emoji,
+            description=activity.description or "",
+            emoji=activity.emoji or "",
             priority_id=activity.priority_id,
-            priority_name=activity.get_priority_name(),
+            priority_name={1: "Baja", 2: "Media", 3: "Alta"}.get(activity.priority_id, "Sin prioridad"),
+            priority_color={1: "#22C55E", 2: "#F59E0B", 3: "#EF4444"}.get(activity.priority_id, "#6B7280"),
             completed=activity.completed,
             has_image=activity.has_image,
             image_path=activity.image_path,
@@ -118,6 +119,8 @@ class CreateActivityUseCase:
                 ChecklistItemDTO(text=item.text, done=item.done)
                 for item in activity.checklist
             ],
-            created_at=activity.created_at.isoformat(),
-            updated_at=activity.updated_at.isoformat()
+            checklist_done=sum(1 for item in activity.checklist if item.done),
+            checklist_total=len(activity.checklist),
+            created_at=activity.created_at.isoformat() if activity.created_at else "",
+            updated_at=activity.updated_at.isoformat() if activity.updated_at else ""
         )

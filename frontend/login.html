@@ -59,7 +59,7 @@
     </div>
 
     <!-- Scripts de la app -->
-    <script src="/frontend/js/api.js"></script>
+    <script src="/frontend/js/api.js?v=999"></script>
     <script>
         // Formateo automático de RUT (ej: 12345678-9) mientras se escribe
         const rutInput = document.getElementById('rut');
@@ -74,8 +74,8 @@
             }
         });
 
-        function doLogin() {
-            console.log("Botón presionado. window.login es:", typeof window.login);
+        async function doLogin() {
+            const btn = document.getElementById('login-btn');
             const rutVal = document.getElementById('rut').value;
             const passVal = document.getElementById('password').value;
             
@@ -83,11 +83,23 @@
                 alert("Por favor completa el RUT y la Contraseña.");
                 return;
             }
-            
-            if(typeof window.login === 'function') {
-                window.login(rutVal, passVal);
-            } else {
-                alert("Error crítico: El archivo api.js no se ha cargado correctamente. Verifica la consola del navegador (F12).");
+
+            if (typeof window.login !== 'function') {
+                alert("Error: El sistema no ha cargado completamente. Recarga con Ctrl+F5.");
+                return;
+            }
+
+            try {
+                btn.textContent = "Cargando...";
+                btn.disabled = true;
+                await window.login(rutVal, passVal);
+                // Si llegamos aquí, el login fue exitoso
+                window.location.href = '/frontend/index.html';
+            } catch (err) {
+                btn.textContent = "Iniciar Sesión";
+                btn.disabled = false;
+                alert("Error: " + err.message);
+                if (window.triggerLoginError) window.triggerLoginError();
             }
         }
         

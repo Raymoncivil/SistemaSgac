@@ -5,6 +5,8 @@ presentation/api/routers/admin.py — Enrutador de administración (solo admin).
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from domain.exceptions import ValidationError
+
+
 from presentation.api.dependencies import (
     get_audit_repository,
     get_current_admin,
