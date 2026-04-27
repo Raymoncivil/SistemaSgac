@@ -705,27 +705,27 @@ window.confirmDelete = function(activityId, cardEl) {
       </div>`;
 
     cardEl.querySelector('#btn-confirm-del').addEventListener('click', async () => {
-        try {
-            await window.deleteActivity(activityId);
-            cardEl.style.opacity = '0';
-            cardEl.style.transition = 'opacity 0.3s';
-            setTimeout(() => {
-                cardEl.remove();
-                window.currentActivities = window.currentActivities.filter(a => a.id !== activityId);
-                if (act) {
-                    const dayActs = window.currentActivities.filter(a => a.day_of_april === act.day_of_april);
-                    window.updateDayCell(act.day_of_april, dayActs);
-                }
-                window.showToast('🗑️ Actividad eliminada', 'success');
-            }, 300);
-        } catch (e) {
-            window.showToast('❌ Error al eliminar', 'danger');
-            if (act) {
-                const newCard = window.renderActivityCard(act);
-                cardEl.replaceWith(newCard);
-            }
+    try {
+        await window.deleteActivity(activityId);
+        cardEl.remove();
+        window.showToast('🗑️ Actividad eliminada', 'success');
+        // Recargar desde API y actualizar drawer
+        const fresh = await window.getAprilActivities();
+        window.currentActivities = fresh;
+        if (act) {
+            const dayActs = fresh.filter(a => a.day_of_april === act.day_of_april);
+            window.updateDayCell(act.day_of_april, dayActs);
+            // Reabrir el drawer con datos frescos
+            window.openDayModal(act.day_of_april, dayActs);
         }
-    });
+    } catch (e) {
+        window.showToast('❌ Error al eliminar', 'danger');
+        if (act) {
+            const newCard = window.renderActivityCard(act);
+            cardEl.replaceWith(newCard);
+        }
+    }
+});   
 
     cardEl.querySelector('#btn-cancel-del').addEventListener('click', () => {
         if (act) {

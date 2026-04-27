@@ -80,12 +80,12 @@
             const passVal = document.getElementById('password').value;
             
             if (!rutVal || !passVal) {
-                alert("Por favor completa el RUT y la Contraseña.");
+                console.warn("Campos vacíos");
                 return;
             }
 
             if (typeof window.login !== 'function') {
-                alert("Error: El sistema no ha cargado completamente. Recarga con Ctrl+F5.");
+                console.error("Sistema no cargado");
                 return;
             }
 
@@ -98,7 +98,7 @@
             } catch (err) {
                 btn.textContent = "Iniciar Sesión";
                 btn.disabled = false;
-                alert("Error: " + err.message);
+                console.error("Error login:", err.message);
                 if (window.triggerLoginError) window.triggerLoginError();
             }
         }
