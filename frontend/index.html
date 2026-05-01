@@ -71,6 +71,9 @@
             </div>
         </aside>
 
+        <!-- DRAG RESIZER -->
+        <div id="sidebar-resizer" class="sidebar-resizer"></div>
+
         <!-- ZONA DERECHA: Área Principal -->
         <main id="main-content">
             <header class="main-header">
@@ -161,6 +164,38 @@
                 if(window.showDailyPopup) window.showDailyPopup(activities);
                 if(window.checkHourlyAlerts) window.checkHourlyAlerts(activities);
                 if(window.startNotificationPolling) window.startNotificationPolling(window.getAprilActivities);
+                
+                // Lógica de Resizer
+                const resizer = document.getElementById('sidebar-resizer');
+                const sidebar = document.getElementById('sidebar');
+                let isResizing = false;
+
+                resizer.addEventListener('mousedown', (e) => {
+                    isResizing = true;
+                    resizer.classList.add('is-resizing');
+                    document.body.style.cursor = 'col-resize';
+                    // Desactivar transiciones para evitar lag mientras se arrastra
+                    sidebar.style.transition = 'none';
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isResizing) return;
+                    let newWidth = e.clientX;
+                    // Límites del sidebar
+                    if (newWidth < 200) newWidth = 200;
+                    if (newWidth > 600) newWidth = 600;
+                    sidebar.style.width = `${newWidth}px`;
+                    sidebar.style.minWidth = `${newWidth}px`;
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isResizing) {
+                        isResizing = false;
+                        resizer.classList.remove('is-resizing');
+                        document.body.style.cursor = '';
+                        sidebar.style.transition = ''; // Restaurar css
+                    }
+                });
                 
             } catch (err) {
                 console.error("Error inicializando el Dashboard SGAC:", err);

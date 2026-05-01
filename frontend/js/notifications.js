@@ -307,8 +307,9 @@
                 if (!_alertedOverdue.has(key)) {
                     _alertedOverdue.add(key);
                     const minsAgo = Math.abs(diffMinutes);
+                    const emojiStr = act.emoji ? `${act.emoji} ` : '';
                     window.showToast(
-                        `⏰ Actividad vencida hace ${minsAgo}m: <b>${act.title}</b>`,
+                        `⏰ Actividad vencida hace ${minsAgo}m: <b>${emojiStr}${act.title}</b>`,
                         'danger',
                         6000
                     );
@@ -334,9 +335,10 @@
                         const isHigh = act.priority_id === 3;
                         const type = isHigh ? 'danger' : 'warning';
                         const prefix = isHigh ? '🔴 [Alta]' : '🔔';
+                        const emojiStr = act.emoji ? `${act.emoji} ` : '';
 
                         window.showToast(
-                            `${prefix} Falta ${t.label} para: <b>${act.title}</b>`,
+                            `${prefix} Falta ${t.label} para: <b>${emojiStr}${act.title}</b>`,
                             type,
                             6000
                         );
@@ -354,8 +356,9 @@
                     /* No disparar toast separado si ya se disparó como "próxima"
                        — evitar spam. Solo si faltan más de 65 minutos. */
                     if (diffMinutes > 65) {
+                        const emojiStr = act.emoji ? `${act.emoji} ` : '';
                         window.showToast(
-                            `🔴 Actividad de alta prioridad hoy: <b>${act.title}</b> (${act.time})`,
+                            `🔴 Actividad de alta prioridad hoy: <b>${emojiStr}${act.title}</b> (${act.time})`,
                             'warning',
                             7000
                         );

@@ -235,8 +235,9 @@ window.startCountdown = function (activities) {
         if (diff <= 0) {
             clearInterval(countdownInterval);
 
+            const emojiStr = nextActivity.emoji ? `${nextActivity.emoji} ` : '';
             banner.innerHTML =
-                `⚡ ¡Es hora de: <b>${nextActivity.title}</b>!`;
+                `⚡ ¡Es hora de: <b>${emojiStr}${nextActivity.title}</b>!`;
 
             banner.classList.add('urgent');
             return;
@@ -273,8 +274,9 @@ window.startCountdown = function (activities) {
             } catch (e) {}
 
             if (window.showToast) {
+                const emojiStr = nextActivity.emoji ? `${nextActivity.emoji} ` : '';
                 window.showToast(
-                    `🔔 Falta 1 hora para: ${nextActivity.title}`,
+                    `🔔 Falta 1 hora para: ${emojiStr}${nextActivity.title}`,
                     'warning'
                 );
             }
@@ -286,7 +288,7 @@ window.startCountdown = function (activities) {
             </span>
 
             <span style="font-size:13px;">
-                ${nextActivity.title}
+                ${nextActivity.emoji ? nextActivity.emoji + ' ' : ''}${nextActivity.title}
             </span>
         `;
 

@@ -115,8 +115,45 @@ select {
     display: flex;
     flex-direction: column;
     padding: 1.5rem;
-    transition: width 0.3s ease, transform 0.3s ease;
+    transition: transform 0.3s ease; /* width transition removida para un drag fluido */
     z-index: 50;
+}
+
+/* ==========================================================================
+   RESIZER DEL SIDEBAR
+   ========================================================================== */
+.sidebar-resizer {
+    width: 10px; /* Área de agarre más ancha para mejor accesibilidad */
+    background-color: transparent;
+    cursor: col-resize;
+    z-index: 60;
+    flex-shrink: 0;
+    position: relative;
+    margin-left: -5px; /* Superponer ligeramente sobre el borde */
+    margin-right: -5px;
+}
+
+/* Indicador visual (handle) tipo pastilla */
+.sidebar-resizer::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 4px;
+    height: 48px;
+    background-color: var(--border);
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+/* Hover y Dragging state */
+.sidebar-resizer:hover::after,
+.sidebar-resizer.is-resizing::after {
+    background-color: var(--accent);
+    height: 100%;
+    width: 4px;
+    border-radius: 0;
 }
 
 .sidebar-header {
