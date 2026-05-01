@@ -17,6 +17,7 @@ class ActivityCreateRequest(BaseModel):
     title: str = Field(..., min_length=1, max_length=150)
     day: int = Field(..., ge=1, le=30)
     priority_id: int = Field(..., ge=1, le=3)
+    time: Optional[str] = Field(None, max_length=5, description="HH:MM")
     description: str = ""
     emoji: str = Field("", max_length=10)
     checklist: List[ChecklistItemSchema] = Field(default_factory=list)
@@ -25,6 +26,7 @@ class ActivityCreateRequest(BaseModel):
 class ActivityUpdateRequest(BaseModel):
     title: Optional[str] = Field(None, min_length=1, max_length=150)
     priority_id: Optional[int] = Field(None, ge=1, le=3)
+    time: Optional[str] = Field(None, max_length=5, description="HH:MM")
     description: Optional[str] = None
     emoji: Optional[str] = Field(None, max_length=10)
     completed: Optional[bool] = None
@@ -35,6 +37,7 @@ class ActivityResponse(BaseModel):
     id: str
     title: str
     day_of_april: int
+    time: Optional[str] = None
     priority_id: int
     priority_name: str
     priority_color: str

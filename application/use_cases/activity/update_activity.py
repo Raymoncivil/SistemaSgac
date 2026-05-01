@@ -71,6 +71,9 @@ class UpdateActivityUseCase:
             if update_dto.title is not None:
                 activity.title = update_dto.title
             
+            if update_dto.time is not None:
+                activity.time = update_dto.time
+            
             if update_dto.description is not None:
                 activity.description = update_dto.description
             
@@ -112,6 +115,7 @@ class UpdateActivityUseCase:
             id=str(activity.id),
             user_id=str(activity.user_id),
             day_of_april=activity.day_of_april,
+            time=activity.time,
             title=activity.title,
             description=activity.description or "",
             emoji=activity.emoji or "",

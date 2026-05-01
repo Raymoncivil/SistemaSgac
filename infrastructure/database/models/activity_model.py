@@ -15,6 +15,7 @@ class ActivityModel(Base):
     user_id = Column(PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     priority_id = Column(Integer, nullable=False)
     day_of_april = Column(SmallInteger, nullable=False)
+    time = Column(String(5), nullable=True)
     title = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
     emoji = Column(String(10), nullable=True)

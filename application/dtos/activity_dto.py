@@ -21,6 +21,7 @@ class ActivityCreateDTO:
     day_of_april: int
     title: str
     priority_id: int
+    time: Optional[str] = None
     description: Optional[str] = None
     emoji: Optional[str] = None
     checklist: List = field(default_factory=list)
@@ -31,6 +32,7 @@ class ActivityCreateDTO:
 class ActivityUpdateDTO:
     """DTO para actualizar una actividad (PATCH)."""
     title: Optional[str] = None
+    time: Optional[str] = None
     description: Optional[str] = None
     priority_id: Optional[int] = None
     emoji: Optional[str] = None
@@ -44,6 +46,7 @@ class ActivityResponseDTO:
     id: str
     user_id: str
     day_of_april: int
+    time: Optional[str]
     title: str
     description: Optional[str]
     emoji: Optional[str]

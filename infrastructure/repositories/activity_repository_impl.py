@@ -65,6 +65,7 @@ class ActivityRepositoryImpl(IActivityRepository):
 
         model.priority_id = activity.priority_id
         model.title = activity.title
+        model.time = activity.time
         model.description = activity.description
         model.emoji = activity.emoji
         model.completed = activity.completed
@@ -109,6 +110,7 @@ class ActivityRepositoryImpl(IActivityRepository):
             priority_id=model.priority_id,
             day_of_april=model.day_of_april,
             title=model.title,
+            time=model.time,
             description=model.description,
             emoji=model.emoji,
             completed=model.completed,
@@ -126,6 +128,7 @@ class ActivityRepositoryImpl(IActivityRepository):
             priority_id=activity.priority_id,
             day_of_april=activity.day_of_april,
             title=activity.title,
+            time=activity.time,
             description=activity.description,
             emoji=activity.emoji,
             completed=activity.completed,

@@ -1287,3 +1287,236 @@ textarea:focus {
         transform: scale(0.95);
     }
 }
+
+/* ==========================================================================
+   MÓDULO DE NOTIFICACIONES INTELIGENTES (notifications.js)
+   Añadido de forma aditiva — no modifica ninguna regla existente
+   ========================================================================== */
+
+/* ── Botón campana y wrapper ─────────────────────────────────────────────── */
+.sgac-notif-wrapper {
+    position: relative;
+    margin-bottom: 0.75rem;
+}
+
+.sgac-notif-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: background-color 0.2s, color 0.2s;
+    position: relative;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+}
+
+.sgac-notif-btn:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+/* ── Badge contador ──────────────────────────────────────────────────────── */
+.sgac-notif-badge {
+    position: absolute;
+    top: 4px;
+    right: 8px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 9px;
+    background-color: #EF4444;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: var(--font-body);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: sgacBadgePop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    pointer-events: none;
+}
+
+@keyframes sgacBadgePop {
+    from { transform: scale(0.5); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+}
+
+/* ── Panel desplegable de historial ─────────────────────────────────────── */
+.sgac-notif-panel {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 8px);
+    width: 300px;
+    max-height: 360px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    z-index: 2000;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+[data-theme="dark"] .sgac-notif-panel {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+.sgac-notif-panel--open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.sgac-notif-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    flex-shrink: 0;
+}
+
+.sgac-notif-clear-btn {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    cursor: pointer;
+    transition: color 0.2s, background 0.2s;
+    font-family: var(--font-body);
+}
+
+.sgac-notif-clear-btn:hover {
+    color: var(--priority-high);
+    border-color: rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.06);
+}
+
+/* ── Lista de notificaciones ─────────────────────────────────────────────── */
+.sgac-notif-list {
+    list-style: none;
+    overflow-y: auto;
+    flex: 1;
+    padding: 0.375rem 0;
+}
+
+.sgac-notif-list::-webkit-scrollbar { width: 4px; }
+.sgac-notif-list::-webkit-scrollbar-track { background: transparent; }
+.sgac-notif-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.sgac-notif-empty {
+    padding: 1.25rem 1rem;
+    text-align: center;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+
+.sgac-notif-item {
+    padding: 0.625rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.sgac-notif-item:last-child { border-bottom: none; }
+
+.sgac-notif-item:hover {
+    background: var(--bg-secondary);
+}
+
+.sgac-notif-item-msg {
+    font-size: 0.8125rem;
+    color: var(--text-primary);
+    line-height: 1.4;
+    font-weight: 500;
+}
+
+.sgac-notif-item-time {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+/* Leída: más tenue */
+.sgac-notif-item.sgac-notif-read .sgac-notif-item-msg {
+    font-weight: 400;
+    color: var(--text-secondary);
+}
+
+/* Borde lateral según tipo */
+.sgac-notif-item.sgac-notif-success { border-left: 3px solid var(--priority-low); }
+.sgac-notif-item.sgac-notif-warning { border-left: 3px solid var(--priority-med); }
+.sgac-notif-item.sgac-notif-danger  { border-left: 3px solid var(--priority-high); }
+.sgac-notif-item.sgac-notif-info    { border-left: 3px solid var(--accent); }
+
+/* ── Toast mejorado ──────────────────────────────────────────────────────── */
+/* Solo añadimos partes que no existen — .toast base ya está en el CSS */
+.toast-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.toast-msg {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.toast-close {
+    flex-shrink: 0;
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    line-height: 1;
+    padding: 0 0.25rem;
+    border-radius: 4px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s;
+    font-family: var(--font-body);
+}
+
+.toast-close:hover {
+    color: var(--text-primary);
+}
+
+/* Animación de salida del toast */
+@keyframes sgacToastOut {
+    to {
+        opacity: 0;
+        transform: translateX(110%);
+    }
+}
+
+/* Toast tipo info (nuevo) */
+.toast-info::before {
+    background-color: var(--accent);
+}
+
+/* ── Responsive: ocultar panel en sidebar colapsado ─────────────────────── */
+@media (max-width: 1024px) {
+    .sgac-notif-wrapper {
+        display: none; /* Sidebar colapsado — la campana no cabe */
+    }
+}

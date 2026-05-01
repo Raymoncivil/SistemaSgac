@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "C:\sgac\presentation\api\routers\activities.py", line 226, in delete_activity
+    await use_case.execute(UUID(current_user["user_id"]), activity_id)
+  File "C:\sgac\application\use_cases\activity\delete_activity.py", line 42, in execute
+    raise ActivityNotFoundError(f"Actividad {activity_id} no existe")
+domain.exceptions.ActivityNotFoundError: Actividad 50ae2162-6e1c-46cf-bd19-771fbd1d6f93 no existe

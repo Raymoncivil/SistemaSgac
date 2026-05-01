@@ -5,16 +5,31 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 import traceback
+import logging
+
+# ── Silenciar logs SQL verbose de SQLAlchemy (solo mostrar WARNING+) ──────────
+logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
+logging.getLogger('sqlalchemy.pool').setLevel(logging.WARNING)
+# ─────────────────────────────────────────────────────────────────────────────
 
 from presentation.api.routers import auth, activities, admin
 from infrastructure.database.connection import engine
 from infrastructure.database.models import Base
 from config import settings
 
+from sqlalchemy import text
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Migración automática para agregar la columna 'time'
+        try:
+            await conn.execute(text('ALTER TABLE activities ADD COLUMN "time" VARCHAR(5);'))
+            print("[SGAC] Migración: Columna 'time' agregada exitosamente.")
+        except Exception as e:
+            # Si falla es probable que la columna ya exista, lo ignoramos silenciosamente
+            pass
     print("[OK] Servidor listo")
     yield
     await engine.dispose()

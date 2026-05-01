@@ -152,7 +152,7 @@ window.initPriorityFilter = function() {
 };
 
 // ── Cuenta regresiva ─────────────────────────────────────────────────────────
-window.startCountdown = function(activities) {
+/* window.startCountdown = function(activities) {
     const banner = document.getElementById('countdown-banner');
     if (!banner) return;
     if (countdownInterval) clearInterval(countdownInterval);
@@ -190,6 +190,125 @@ window.startCountdown = function(activities) {
         banner.classList.toggle('urgent', h === 0 && m < 60);
     }, 1000);
 };
+ */
+
+
+window.startCountdown = function (activities) {
+    const banner = document.getElementById('countdown-banner');
+    if (!banner) return;
+
+    if (countdownInterval) clearInterval(countdownInterval);
+
+    const now = new Date();
+    let nextActivity = null;
+    let minDiff = Infinity;
+
+    activities.forEach(act => {
+        if (!act.time) return;
+
+        const parts = act.time.split(':');
+        if (parts.length < 2) return;
+
+        const h = parseInt(parts[0]);
+        const m = parseInt(parts[1]);
+
+        const actDate = new Date(2026, 3, act.day_of_april, h, m);
+        const diff = actDate - now;
+
+        if (diff > 0 && diff < minDiff) {
+            minDiff = diff;
+            nextActivity = { ...act, actDate };
+        }
+    });
+
+    if (!nextActivity) {
+        banner.classList.add('hidden');
+        return;
+    }
+
+    banner.classList.remove('hidden');
+
+    countdownInterval = setInterval(() => {
+
+        const diff = nextActivity.actDate - new Date();
+
+        if (diff <= 0) {
+            clearInterval(countdownInterval);
+
+            banner.innerHTML =
+                `⚡ ¡Es hora de: <b>${nextActivity.title}</b>!`;
+
+            banner.classList.add('urgent');
+            return;
+        }
+
+        const totalMinutes = Math.floor(diff / 1000 / 60);
+        const h = Math.floor(totalMinutes / 60);
+        const m = totalMinutes % 60;
+
+        /* 🔔 ALERTA A 1 HORA */
+        if (
+            totalMinutes <= 60 &&
+            lastAlertedActivityId !== nextActivity.id
+        ) {
+            lastAlertedActivityId = nextActivity.id;
+
+            // sonido generado por navegador
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.frequency.value = 880;
+                osc.type = 'sine';
+
+                gain.gain.setValueAtTime(0.2, ctx.currentTime);
+
+                osc.start();
+                osc.stop(ctx.currentTime + 0.4);
+
+            } catch (e) {}
+
+            if (window.showToast) {
+                window.showToast(
+                    `🔔 Falta 1 hora para: ${nextActivity.title}`,
+                    'warning'
+                );
+            }
+        }
+
+        banner.innerHTML = `
+            <span style="font-size:10px;font-weight:700;">
+                Siguiente • en ${h}h ${m}m
+            </span>
+
+            <span style="font-size:13px;">
+                ${nextActivity.title}
+            </span>
+        `;
+
+        banner.classList.toggle('urgent', totalMinutes <= 60);
+
+    }, 1000);
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // ── Popup actividad destacada ────────────────────────────────────────────────
 window.showDailyPopup = function(activities) {
@@ -270,6 +389,7 @@ window.renderActivityCard = function(act) {
                     style="${act.completed ? 'text-decoration:line-through;color:var(--text-secondary);' : ''}">
                     ${act.title}
                 </h4>
+                ${act.time ? `<div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:0.25rem;display:flex;align-items:center;gap:0.25rem;"><span style="font-size:0.85rem">🕒</span> ${act.time}</div>` : ''}
                 <p class="card-desc">${act.description || 'Sin descripción'}</p>
             </div>
         </div>
@@ -343,7 +463,6 @@ window.toggleActivityDone = async function(act, cardEl) {
         window.showToast('❌ Error al actualizar estado', 'danger');
     }
 };
-
 // ── Modal de detalle de actividad ────────────────────────────────────────────
 window.showActivityDetail = function(act) {
     document.getElementById('activity-detail-modal')?.remove();
@@ -358,22 +477,10 @@ window.showActivityDetail = function(act) {
         || { 1: 'Baja', 2: 'Media', 3: 'Alta' }[act.priority_id]
         || '';
 
-    // Checklist
-    let checklistHTML = '<p style="color:var(--text-secondary);font-size:0.82rem;margin:0;">Sin ítems en el checklist</p>';
-    if (act.checklist && act.checklist.length > 0) {
-        checklistHTML = act.checklist.map((item, i) => `
-            <div style="display:flex;align-items:center;gap:0.5rem;
-                        padding:0.375rem 0;border-bottom:1px solid var(--border);">
-                <input type="checkbox" ${item.done ? 'checked' : ''} disabled
-                       style="width:15px;height:15px;">
-                <span style="font-size:0.84rem;
-                             ${item.done ? 'text-decoration:line-through;color:var(--text-secondary);' : 'color:var(--text-primary);'}">
-                    ${item.text}
-                </span>
-            </div>
-        `).join('');
-    }
+    const doneCnt  = (act.checklist || []).filter(i => i.done).length;
+    const totalCnt = (act.checklist || []).length;
 
+    // Crear overlay
     const overlay = document.createElement('div');
     overlay.id = 'activity-detail-modal';
     overlay.style.cssText = `
@@ -383,119 +490,192 @@ window.showActivityDetail = function(act) {
         z-index:3000;
     `;
 
-    overlay.innerHTML = `
-        <div style="background:var(--bg-primary);border-radius:14px;
-                    width:430px;max-width:95vw;max-height:88vh;
-                    overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,0.25);">
+    // Crear card del modal
+    const card = document.createElement('div');
+    card.style.cssText = `
+        background:var(--bg-primary);border-radius:14px;
+        width:430px;max-width:95vw;max-height:88vh;
+        overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,0.25);
+    `;
+    card.addEventListener('click', e => e.stopPropagation());
 
-            <!-- Franja de color -->
-            <div style="height:6px;background:${stripColor};border-radius:14px 14px 0 0;"></div>
-
-            <!-- Header -->
-            <div style="padding:1.25rem 1.5rem 1rem;
-                        border-bottom:1px solid var(--border);
-                        display:flex;align-items:flex-start;
-                        justify-content:space-between;gap:1rem;">
-                <div style="display:flex;align-items:center;gap:0.75rem;">
-                    <span style="font-size:2.2rem;line-height:1;">${act.emoji || '📅'}</span>
-                    <div>
-                        <h2 style="font-size:1.1rem;font-weight:700;margin:0;
-                                   color:var(--text-primary);
-                                   ${act.completed ? 'text-decoration:line-through;' : ''}">
-                            ${act.title}
-                        </h2>
-                        <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.3rem;flex-wrap:wrap;">
-                            <span style="width:10px;height:10px;border-radius:50%;
-                                         background:${statusColor};display:inline-block;"></span>
-                            <span style="font-size:0.78rem;color:var(--text-secondary);">${statusLabel}</span>
-                            <span style="font-size:0.78rem;color:var(--text-secondary);">•</span>
-                            <span style="font-size:0.78rem;color:${stripColor};font-weight:600;">${priorityName}</span>
-                            <span style="font-size:0.78rem;color:var(--text-secondary);">•</span>
-                            <span style="font-size:0.78rem;color:var(--text-secondary);">📆 ${act.day_of_april} Abril</span>
-                        </div>
+    card.innerHTML = `
+        <div style="height:6px;background:${stripColor};border-radius:14px 14px 0 0;"></div>
+        <div style="padding:1.25rem 1.5rem 1rem;border-bottom:1px solid var(--border);
+                    display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;">
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <span style="font-size:2.2rem;line-height:1;">${act.emoji || '📅'}</span>
+                <div>
+                    <h2 style="font-size:1.1rem;font-weight:700;margin:0;color:var(--text-primary);
+                               ${act.completed ? 'text-decoration:line-through;' : ''}">
+                        ${act.title}
+                    </h2>
+                    <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.3rem;flex-wrap:wrap;">
+                        <span style="width:10px;height:10px;border-radius:50%;
+                                     background:${statusColor};display:inline-block;"></span>
+                        <span style="font-size:0.78rem;color:var(--text-secondary);">${statusLabel}</span>
+                        <span style="font-size:0.78rem;color:var(--text-secondary);">•</span>
+                        <span style="font-size:0.78rem;color:${stripColor};font-weight:600;">${priorityName}</span>
+                        <span style="font-size:0.78rem;color:var(--text-secondary);">•</span>
+                        <span style="font-size:0.78rem;color:var(--text-secondary);">📆 ${act.day_of_april} Abril</span>
                     </div>
                 </div>
-                <button id="close-detail-modal"
-                        style="font-size:1.5rem;color:var(--text-secondary);
-                               background:none;border:none;cursor:pointer;
-                               line-height:1;flex-shrink:0;padding:0.2rem 0.4rem;
-                               border-radius:4px;">×</button>
             </div>
-
-            <!-- Cuerpo -->
-            <div style="padding:1.25rem 1.5rem;">
-
-                <!-- Descripción -->
-                <div style="margin-bottom:1.125rem;">
-                    <p style="font-size:0.7rem;font-weight:700;text-transform:uppercase;
-                               letter-spacing:0.06em;color:var(--text-secondary);margin-bottom:0.375rem;">
-                        Descripción
-                    </p>
-                    <p style="font-size:0.875rem;color:var(--text-primary);line-height:1.6;margin:0;">
-                        ${act.description || 'Sin descripción'}
-                    </p>
-                </div>
-
-                <!-- Checklist -->
-                <div style="margin-bottom:1.25rem;">
-                    <p style="font-size:0.7rem;font-weight:700;text-transform:uppercase;
-                               letter-spacing:0.06em;color:var(--text-secondary);margin-bottom:0.5rem;">
-                        Checklist
-                        ${act.checklist && act.checklist.length > 0
-                            ? `<span style="font-weight:400;">(${act.checklist.filter(i=>i.done).length}/${act.checklist.length})</span>`
-                            : ''}
-                    </p>
-                    <div>${checklistHTML}</div>
-                </div>
-
-                <!-- Botones -->
-                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                    <button id="detail-btn-done"
-                            style="flex:1;min-width:120px;padding:0.625rem;
-                                   border-radius:6px;font-weight:500;font-size:0.875rem;
-                                   border:none;cursor:pointer;
-                                   background:${act.completed ? '#F59E0B' : '#22C55E'};color:white;">
-                        ${act.completed ? '↩ Marcar pendiente' : '✓ Marcar realizada'}
-                    </button>
-                    <button id="detail-btn-edit"
-                            style="flex:1;min-width:100px;padding:0.625rem;
-                                   border-radius:6px;font-weight:500;font-size:0.875rem;
-                                   border:1px solid var(--border);cursor:pointer;
-                                   background:var(--bg-secondary);color:var(--text-primary);">
-                        ✏️ Editar
-                    </button>
-                    <button id="detail-btn-delete"
-                            style="padding:0.625rem 1rem;border-radius:6px;
-                                   font-weight:500;font-size:0.875rem;cursor:pointer;
-                                   border:1px solid rgba(239,68,68,0.3);
-                                   background:rgba(239,68,68,0.07);color:#EF4444;">
-                        🗑️
-                    </button>
-                </div>
+            <button id="close-detail-modal"
+                    style="font-size:1.5rem;color:var(--text-secondary);background:none;
+                           border:none;cursor:pointer;line-height:1;flex-shrink:0;
+                           padding:0.2rem 0.4rem;border-radius:4px;">×</button>
+        </div>
+        <div style="padding:1.25rem 1.5rem;">
+            <div style="margin-bottom:1.125rem;">
+                <p style="font-size:0.7rem;font-weight:700;text-transform:uppercase;
+                           letter-spacing:0.06em;color:var(--text-secondary);margin-bottom:0.375rem;">
+                    Descripción
+                </p>
+                <p style="font-size:0.875rem;color:var(--text-primary);line-height:1.6;margin:0;">
+                    ${act.description || 'Sin descripción'}
+                </p>
+            </div>
+            <div style="margin-bottom:1.25rem;">
+                <p style="font-size:0.7rem;font-weight:700;text-transform:uppercase;
+                           letter-spacing:0.06em;color:var(--text-secondary);margin-bottom:0.5rem;">
+                    Checklist
+                    ${totalCnt > 0
+                        ? `<span id="checklist-counter" style="font-weight:400;">(${doneCnt}/${totalCnt})</span>`
+                        : ''}
+                </p>
+                <div id="checklist-items-container"></div>
+            </div>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                <button id="detail-btn-done"
+                        style="flex:1;min-width:120px;padding:0.625rem;border-radius:6px;
+                               font-weight:500;font-size:0.875rem;border:none;cursor:pointer;
+                               background:${act.completed ? '#F59E0B' : '#22C55E'};color:white;">
+                    ${act.completed ? '↩ Marcar pendiente' : '✓ Marcar realizada'}
+                </button>
+                <button id="detail-btn-edit"
+                        style="flex:1;min-width:100px;padding:0.625rem;border-radius:6px;
+                               font-weight:500;font-size:0.875rem;border:1px solid var(--border);
+                               cursor:pointer;background:var(--bg-secondary);color:var(--text-primary);">
+                    ✏️ Editar
+                </button>
+                <button id="detail-btn-delete"
+                        style="padding:0.625rem 1rem;border-radius:6px;font-weight:500;
+                               font-size:0.875rem;cursor:pointer;
+                               border:1px solid rgba(239,68,68,0.3);
+                               background:rgba(239,68,68,0.07);color:#EF4444;">
+                    🗑️
+                </button>
             </div>
         </div>
     `;
 
+    overlay.appendChild(card);
     document.body.appendChild(overlay);
 
-    // Cerrar al clic fuera
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
-    overlay.querySelector('#close-detail-modal').addEventListener('click', () => overlay.remove());
+    // ── Construir checklist con createElement (no innerHTML) ──────────────────
+    const container = card.querySelector('#checklist-items-container');
+
+    if (!act.checklist || act.checklist.length === 0) {
+        const empty = document.createElement('p');
+        empty.style.cssText = 'color:var(--text-secondary);font-size:0.82rem;margin:0;';
+        empty.textContent = 'Sin ítems en el checklist';
+        container.appendChild(empty);
+    } else {
+        // Copia mutable del checklist para este modal
+        let localChecklist = act.checklist.map(i => ({ ...i }));
+
+        localChecklist.forEach((item, idx) => {
+            const row = document.createElement('div');
+            row.style.cssText = `
+                display:flex;align-items:center;gap:0.5rem;
+                padding:0.375rem 0;border-bottom:1px solid var(--border);
+            `;
+
+
+
+
+
+            const chk = document.createElement('input');
+            chk.type    = 'checkbox';
+            chk.checked = item.done;
+            chk.style.cssText = 'width:16px;height:16px;cursor:pointer;accent-color:#4F46E5;flex-shrink:0;';
+
+            const lbl = document.createElement('label');
+            lbl.textContent = item.text;
+            lbl.style.cssText = `
+                font-size:0.84rem;cursor:pointer;
+                ${item.done ? 'text-decoration:line-through;color:var(--text-secondary);' : 'color:var(--text-primary);'}
+            `;
+
+            // Evento de cambio
+            chk.addEventListener('change', async () => {
+                localChecklist[idx].done = chk.checked;
+
+                // Actualizar estilo del label
+                lbl.style.textDecoration = chk.checked ? 'line-through' : 'none';
+                lbl.style.color = chk.checked
+                    ? 'var(--text-secondary)'
+                    : 'var(--text-primary)';
+
+                // Actualizar contador
+                const newDone = localChecklist.filter(i => i.done).length;
+                const counter = card.querySelector('#checklist-counter');
+                if (counter) counter.textContent = `(${newDone}/${localChecklist.length})`;
+
+                try {
+                    const updated = await window.updateActivity(act.id, {
+                        checklist: localChecklist
+                    });
+                    // Sincronizar con currentActivities
+                    const gIdx = window.currentActivities.findIndex(a => a.id === act.id);
+                    if (gIdx !== -1) {
+                        window.currentActivities[gIdx] = updated;
+                        act.checklist = updated.checklist;
+                        localChecklist = updated.checklist.map(i => ({ ...i }));
+                    }
+                    window.showToast(
+                        chk.checked ? '✅ Ítem completado' : '↩ Ítem desmarcado',
+                        chk.checked ? 'success' : 'warning'
+                    );
+                } catch (err) {
+                    // Revertir si falla
+                    chk.checked = !chk.checked;
+                    localChecklist[idx].done = chk.checked;
+                    lbl.style.textDecoration = chk.checked ? 'line-through' : 'none';
+                    lbl.style.color = chk.checked
+                        ? 'var(--text-secondary)'
+                        : 'var(--text-primary)';
+                    window.showToast('❌ Error al actualizar checklist', 'danger');
+                }
+            });
+
+            row.appendChild(chk);
+            row.appendChild(lbl);
+            container.appendChild(row);
+        });
+    }
+
+    // ── Eventos de botones ────────────────────────────────────────────────────
+
+    // Cerrar al clic en overlay (fuera de la card)
+    overlay.addEventListener('click', () => overlay.remove());
+
+    // Cerrar con ×
+    card.querySelector('#close-detail-modal').addEventListener('click', () => overlay.remove());
 
     // Toggle completado
-    overlay.querySelector('#detail-btn-done').addEventListener('click', async () => {
+    card.querySelector('#detail-btn-done').addEventListener('click', async () => {
         overlay.remove();
         const updated = await window.updateActivity(act.id, { completed: !act.completed }).catch(() => null);
         if (updated) {
             const idx = window.currentActivities.findIndex(a => a.id === act.id);
             if (idx !== -1) window.currentActivities[idx] = updated;
-            const dayActs = window.currentActivities.filter(a => a.day_of_april === updated.day_of_april);
+            const fresh = await window.getAprilActivities();
+            window.currentActivities = fresh;
+            const dayActs = fresh.filter(a => a.day_of_april === updated.day_of_april);
             window.updateDayCell(updated.day_of_april, dayActs);
-            // Recargar desde la API para asegurar datos frescos
-            const freshActivities = await window.getAprilActivities();
-            window.currentActivities = freshActivities;
-            const freshDayActs = freshActivities.filter(a => a.day_of_april === updated.day_of_april);
-            window.openDayModal(updated.day_of_april, freshDayActs);
+            window.openDayModal(updated.day_of_april, dayActs);
             window.showToast(
                 updated.completed ? '✅ Marcada como realizada' : '↩ Marcada como pendiente',
                 updated.completed ? 'success' : 'warning'
@@ -504,22 +684,33 @@ window.showActivityDetail = function(act) {
     });
 
     // Editar
-    overlay.querySelector('#detail-btn-edit').addEventListener('click', () => {
+    card.querySelector('#detail-btn-edit').addEventListener('click', () => {
         overlay.remove();
         window.showEditForm(act);
     });
 
     // Eliminar
-    overlay.querySelector('#detail-btn-delete').addEventListener('click', () => {
+    card.querySelector('#detail-btn-delete').addEventListener('click', () => {
         overlay.remove();
-        window.deleteActivity(act.id).then(() => {
+        window.deleteActivity(act.id).then(async () => {
             window.currentActivities = window.currentActivities.filter(a => a.id !== act.id);
-            const dayActs = window.currentActivities.filter(a => a.day_of_april === act.day_of_april);
+            const fresh = await window.getAprilActivities();
+            window.currentActivities = fresh;
+            const dayActs = fresh.filter(a => a.day_of_april === act.day_of_april);
             window.updateDayCell(act.day_of_april, dayActs);
             window.openDayModal(act.day_of_april, dayActs);
             window.showToast('🗑️ Actividad eliminada', 'success');
         }).catch(() => window.showToast('❌ Error al eliminar', 'danger'));
     });
+
+    // Escape
+    const escHandler = (e) => {
+        if (e.key === 'Escape') {
+            overlay.remove();
+            document.removeEventListener('keydown', escHandler);
+        }
+    };
+    document.addEventListener('keydown', escHandler);
 };
 
 // ── Formulario de creación ────────────────────────────────────────────────────
@@ -527,10 +718,16 @@ window.showCreateForm = function(day) {
     const content = document.getElementById('modal-content-list');
     content.innerHTML = `
     <div class="activity-form" id="activity-form">
-      <div class="form-group">
-        <label class="form-label">Título *</label>
-        <input id="f-title" class="form-input" type="text" maxlength="150" placeholder="Nombre de la actividad"/>
-        <span class="form-error hidden" id="f-title-err">El título es requerido</span>
+      <div class="form-group" style="display:flex;gap:1rem;">
+        <div style="flex:1;">
+            <label class="form-label">Título *</label>
+            <input id="f-title" class="form-input" type="text" maxlength="150" placeholder="Nombre de la actividad"/>
+            <span class="form-error hidden" id="f-title-err">El título es requerido</span>
+        </div>
+        <div style="width:100px;">
+            <label class="form-label">Hora</label>
+            <input id="f-time" class="form-input" type="time"/>
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">Emoji</label>
@@ -612,12 +809,13 @@ window.submitCreateForm = async function(day) {
     const desc       = document.getElementById('f-desc').value.trim();
     const selPriority = document.querySelector('.priority-btn.sel');
     const priorityId  = selPriority ? Number(selPriority.dataset.pid) : 1;
+    const timeVal     = document.getElementById('f-time').value || null;
     const checklist   = Array.from(
         document.querySelectorAll('#f-checklist .checklist-item-row span')
     ).map(span => ({ text: span.textContent, done: false }));
 
     try {
-        const newAct = await window.createActivity({ title, day, priority_id: priorityId, description: desc, emoji, checklist });
+        const newAct = await window.createActivity({ title, day, priority_id: priorityId, time: timeVal, description: desc, emoji, checklist });
         window.currentActivities.push(newAct);
         const dayActs = window.currentActivities.filter(a => a.day_of_april === day);
         window.updateDayCell(day, dayActs);
@@ -635,6 +833,7 @@ window.showEditForm = function(activity) {
     window.showCreateForm(activity.day_of_april);
 
     document.getElementById('f-title').value = activity.title || '';
+    document.getElementById('f-time').value  = activity.time || '';
     document.getElementById('f-emoji').value = activity.emoji || '';
     document.getElementById('f-desc').value  = activity.description || '';
 
@@ -670,12 +869,13 @@ window.submitUpdateForm = async function(activityId, day) {
     const desc        = document.getElementById('f-desc').value.trim();
     const selPriority = document.querySelector('.priority-btn.sel');
     const priorityId  = selPriority ? Number(selPriority.dataset.pid) : 1;
+    const timeVal     = document.getElementById('f-time').value || null;
     const checklist   = Array.from(
         document.querySelectorAll('#f-checklist .checklist-item-row span')
     ).map(span => ({ text: span.textContent, done: false }));
 
     try {
-        const updatedAct = await window.updateActivity(activityId, { title, priority_id: priorityId, description: desc, emoji, checklist });
+        const updatedAct = await window.updateActivity(activityId, { title, priority_id: priorityId, time: timeVal, description: desc, emoji, checklist });
         const idx = window.currentActivities.findIndex(a => a.id === activityId);
         if (idx !== -1) window.currentActivities[idx] = updatedAct;
         const dayActs = window.currentActivities.filter(a => a.day_of_april === day);

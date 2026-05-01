@@ -36,6 +36,7 @@ def _to_response(result) -> ActivityResponse:
         id=str(result.id),
         title=result.title,
         day_of_april=result.day_of_april,
+        time=result.time,
         priority_id=result.priority_id,
         priority_name=result.priority_name,
         priority_color=result.priority_color,
@@ -56,6 +57,10 @@ def _to_response(result) -> ActivityResponse:
 
 
 def _translate_error(exc: Exception) -> HTTPException:
+    import traceback
+    with open("c:\\sgac\\error_log.txt", "w", encoding="utf-8") as f:
+        f.write(traceback.format_exc())
+    
     if isinstance(exc, ValidationError):
         return HTTPException(status_code=400, detail=str(exc))
     if isinstance(exc, UnauthorizedAccessError):
@@ -131,6 +136,7 @@ async def create_activity(
             user_id=user_id,
             priority_id=int(payload.priority_id),
             day_of_april=int(payload.day),
+            time=payload.time,
             title=str(payload.title),
             description=str(payload.description or ""),
             emoji=str(payload.emoji or ""),
@@ -160,6 +166,7 @@ async def create_activity(
             "id": str(model.id),
             "title": str(model.title),
             "day_of_april": int(model.day_of_april),
+            "time": model.time,
             "priority_id": int(pid),
             "priority_name": priority_names.get(pid, "Sin prioridad"),
             "priority_color": priority_colors.get(pid, "#6B7280"),
@@ -194,6 +201,7 @@ async def update_activity(
         use_case = UpdateActivityUseCase(activity_repo, user_repo)
         dto = ActivityUpdateDTO(
             title=payload.title,
+            time=payload.time,
             description=payload.description,
             priority_id=payload.priority_id,
             emoji=payload.emoji,

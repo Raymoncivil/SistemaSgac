@@ -42,6 +42,7 @@ class Activity:
     priority_id: int
     day_of_april: int
     title: str
+    time: Optional[str] = None
     description: Optional[str] = None
     emoji: Optional[str] = None
     completed: bool = False

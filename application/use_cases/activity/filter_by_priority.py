@@ -68,6 +68,7 @@ class FilterByPriorityUseCase:
             id=str(activity.id),
             user_id=str(activity.user_id),
             day_of_april=activity.day_of_april,
+            time=activity.time,
             title=activity.title,
             description=activity.description or "",
             emoji=activity.emoji or "",
