@@ -30,6 +30,40 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             # Si falla es probable que la columna ya exista, lo ignoramos silenciosamente
             pass
+            
+    # NUEVO BLOQUE DE CONEXIÓN PARA EVITAR InFailedSQLTransactionError
+    async with engine.begin() as conn2:
+        # INSERTAR USUARIOS DE PRUEBA SI NO EXISTEN
+        try:
+            from infrastructure.security.jwt_service import JWTService
+            from uuid import uuid4
+            from datetime import datetime
+            
+            auth_svc = JWTService()
+            
+            # Verificar si existe el admin 111111111
+            admin_check = await conn2.execute(text("SELECT id FROM users WHERE rut = '111111111'"))
+            if not admin_check.fetchone():
+                pwd_admin = auth_svc.hash_password("admin123")
+                await conn2.execute(
+                    text("INSERT INTO users (id, rut, full_name, password_hash, role, is_active, created_at) VALUES (:id, :rut, :name, :pwd, :role, True, :dt)"),
+                    {"id": str(uuid4()), "rut": "111111111", "name": "Admin de Prueba", "pwd": pwd_admin, "role": "admin", "dt": datetime.now()}
+                )
+            
+            # Verificar si existe el user 222222222
+            user_check = await conn2.execute(text("SELECT id FROM users WHERE rut = '222222222'"))
+            pwd_user = auth_svc.hash_password("usuario123")
+            if not user_check.fetchone():
+                await conn2.execute(
+                    text("INSERT INTO users (id, rut, full_name, password_hash, role, is_active, created_at) VALUES (:id, :rut, :name, :pwd, :role, True, :dt)"),
+                    {"id": str(uuid4()), "rut": "222222222", "name": "Usuario Normal", "pwd": pwd_user, "role": "user", "dt": datetime.now()}
+                )
+            else:
+                await conn2.execute(text("UPDATE users SET password_hash = :pwd WHERE rut = '222222222'"), {"pwd": pwd_user})
+            print("[SGAC] Usuarios de prueba verificados/creados.")
+        except Exception as e:
+            print(f"[SGAC] Error creando usuarios de prueba: {e}")
+            
     print("[OK] Servidor listo")
     yield
     await engine.dispose()

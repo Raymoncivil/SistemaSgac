@@ -70,6 +70,8 @@ window.login = async function(rut, password) {
             const data = await res.json();
             memToken = data.access_token;
             sessionStorage.setItem('sgac_token', memToken);
+            sessionStorage.setItem('sgac_role', data.role);
+            sessionStorage.setItem('sgac_name', data.full_name);
             resetInactivityTimer();
             // Redirigir al calendario principal
             window.location.href = "/";
@@ -99,6 +101,8 @@ window.logout = async function() {
     }
     memToken = null;
     sessionStorage.removeItem('sgac_token');
+    sessionStorage.removeItem('sgac_role');
+    sessionStorage.removeItem('sgac_name');
     if (inactivityTimer) clearTimeout(inactivityTimer);
     
     // Redirigir a login si no estamos ahí

@@ -56,9 +56,12 @@
 
             <!-- Footer del Sidebar: Usuario y Logout -->
             <div class="sidebar-footer">
-                <div class="user-profile">
+                <div class="user-profile" style="align-items: center;">
                     <div class="avatar" id="user-avatar-initial">U</div>
-                    <span class="user-name" id="user-name">Usuario</span>
+                    <div style="display:flex; flex-direction:column; justify-content:center;">
+                        <span class="user-name" id="user-name" style="line-height:1.2;">Usuario</span>
+                        <span id="admin-badge" style="display:none; font-size:0.65rem; background:#EF4444; color:white; padding:0.1rem 0.3rem; border-radius:4px; font-weight:bold; width:fit-content; margin-top:2px;">ADMIN</span>
+                    </div>
                 </div>
                 <button id="btn-logout" class="btn-logout" aria-label="Cerrar Sesión">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -146,6 +149,21 @@
                 if (!token) {
                     window.location.href = '/frontend/login.html';
                     return;
+                }
+
+                // Leer rol y nombre de sessionStorage y actualizar UI
+                const role = sessionStorage.getItem('sgac_role');
+                const fullName = sessionStorage.getItem('sgac_name') || 'Usuario';
+                
+                const userNameEl = document.getElementById('user-name');
+                const userAvatarEl = document.getElementById('user-avatar-initial');
+                const adminBadgeEl = document.getElementById('admin-badge');
+                
+                if (userNameEl) userNameEl.textContent = fullName;
+                if (userAvatarEl) userAvatarEl.textContent = fullName.charAt(0).toUpperCase();
+                
+                if (role === 'admin' && adminBadgeEl) {
+                    adminBadgeEl.style.display = 'inline-block';
                 }
 
                 // 1. Cargar Datos

@@ -77,9 +77,41 @@ async def list_activities(
     user_repo=Depends(get_user_repository),
 ):
     try:
-        use_case = GetAllAprilUseCase(activity_repo, user_repo)
-        results = await use_case.execute(UUID(current_user["user_id"]), UUID(current_user["user_id"]))
-        return [_to_response(r) for r in results]
+        user_id = UUID(current_user["user_id"])
+        role = current_user.get("role", "user")
+        
+        if role == "admin":
+            activities = await activity_repo.get_all_for_admin()
+        else:
+            activities = await activity_repo.get_all_by_user(user_id)
+            
+        priority_names = {1: "Baja", 2: "Media", 3: "Alta"}
+        priority_colors = {1: "#22C55E", 2: "#F59E0B", 3: "#EF4444"}
+        
+        response_list = []
+        for act in activities:
+            checklist_done = sum(1 for i in act.checklist if i.done)
+            checklist_total = len(act.checklist)
+            response_list.append(ActivityResponse(
+                id=str(act.id),
+                title=act.title,
+                day_of_april=act.day_of_april,
+                time=act.time,
+                priority_id=act.priority_id,
+                priority_name=priority_names.get(act.priority_id, "Sin prioridad"),
+                priority_color=priority_colors.get(act.priority_id, "#6B7280"),
+                description=act.description or "",
+                emoji=act.emoji or "",
+                completed=act.completed,
+                has_image=act.has_image,
+                image_path=act.image_path,
+                checklist=[{"text": i.text, "done": i.done} for i in act.checklist],
+                checklist_done=checklist_done,
+                checklist_total=checklist_total,
+                created_at=str(act.created_at) if act.created_at else "",
+                updated_at=str(act.updated_at) if act.updated_at else "",
+            ))
+        return response_list
     except Exception as exc:
         raise _translate_error(exc)
 
@@ -198,6 +230,17 @@ async def update_activity(
     user_repo=Depends(get_user_repository),
 ):
     try:
+        user_id = UUID(current_user["user_id"])
+        role = current_user.get("role", "user")
+        
+        # Verificar permisos
+        activity = await activity_repo.get_by_id(activity_id)
+        if not activity:
+            raise HTTPException(status_code=404, detail="Actividad no encontrada")
+            
+        if role == "user" and str(activity.user_id) != str(user_id):
+            raise HTTPException(status_code=403, detail="No tienes permiso para modificar esta actividad")
+            
         use_case = UpdateActivityUseCase(activity_repo, user_repo)
         dto = ActivityUpdateDTO(
             title=payload.title,
@@ -208,9 +251,11 @@ async def update_activity(
             completed=payload.completed,
             checklist=payload.checklist,
         )
-        result = await use_case.execute(UUID(current_user["user_id"]), activity_id, dto)
+        result = await use_case.execute(user_id, activity_id, dto)
         return _to_response(result)
     except Exception as exc:
+        if isinstance(exc, HTTPException):
+            raise exc
         raise _translate_error(exc)
 
 
@@ -222,8 +267,21 @@ async def delete_activity(
     user_repo=Depends(get_user_repository),
 ):
     try:
+        user_id = UUID(current_user["user_id"])
+        role = current_user.get("role", "user")
+        
+        # Verificar permisos
+        activity = await activity_repo.get_by_id(activity_id)
+        if not activity:
+            raise HTTPException(status_code=404, detail="Actividad no encontrada")
+            
+        if role == "user" and str(activity.user_id) != str(user_id):
+            raise HTTPException(status_code=403, detail="No tienes permiso para modificar esta actividad")
+            
         use_case = DeleteActivityUseCase(activity_repo, user_repo)
-        await use_case.execute(UUID(current_user["user_id"]), activity_id)
+        await use_case.execute(user_id, activity_id)
         return Response(status_code=status.HTTP_204_NO_CONTENT)
     except Exception as exc:
+        if isinstance(exc, HTTPException):
+            raise exc
         raise _translate_error(exc)
