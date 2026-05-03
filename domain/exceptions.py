@@ -10,7 +10,17 @@ class DomainException(Exception):
 
 
 class InvalidRUTException(DomainException):
-    """RUT chileno inválido."""
+    """RUT chileno inválido (genérico)."""
+    pass
+
+
+class InvalidRUTFormatException(InvalidRUTException):
+    """El formato del RUT no es válido (muy corto, caracteres incorrectos)."""
+    pass
+
+
+class InvalidRUTDVException(InvalidRUTException):
+    """El dígito verificador del RUT es incorrecto."""
     pass
 
 
@@ -41,4 +51,14 @@ class InvalidEmailError(DomainException):
 
 class ValidationError(DomainException):
     """Error de validación de datos."""
+    pass
+
+
+class UserInactiveException(DomainException):
+    """El usuario está inactivo en el sistema."""
+    pass
+
+
+class WrongPasswordException(DomainException):
+    """La contraseña proporcionada es incorrecta."""
     pass

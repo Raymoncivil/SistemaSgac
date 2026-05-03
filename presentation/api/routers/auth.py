@@ -12,7 +12,14 @@ from application.dtos.auth_dto import (
 from application.use_cases.auth.authenticate_user import AuthenticateUserUseCase
 from application.use_cases.auth.register_user import RegisterUserUseCase
 
-from domain.exceptions import UserNotFoundError, ValidationError
+from domain.exceptions import (
+    UserNotFoundError,
+    ValidationError,
+    InvalidRUTFormatException,
+    InvalidRUTDVException,
+    UserInactiveException,
+    WrongPasswordException
+)
 
 from presentation.api.dependencies import (
     get_auth_service,
@@ -32,10 +39,18 @@ router = APIRouter()
 
 
 def _handle_error(exc: Exception) -> HTTPException:
+    if isinstance(exc, InvalidRUTFormatException):
+        return HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="RUT_INVALID_FORMAT")
+    if isinstance(exc, InvalidRUTDVException):
+        return HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="RUT_INVALID_DV")
+    if isinstance(exc, UserNotFoundError):
+        return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="RUT_NOT_FOUND")
+    if isinstance(exc, UserInactiveException):
+        return HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="USER_INACTIVE")
+    if isinstance(exc, WrongPasswordException):
+        return HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="WRONG_PASSWORD")
     if isinstance(exc, ValidationError):
         return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
-    if isinstance(exc, UserNotFoundError):
-        return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
     return HTTPException(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         detail="Error interno del servidor"
@@ -70,7 +85,14 @@ async def login(
             role=result.role,
         )
 
-    except (ValidationError, UserNotFoundError) as exc:
+    except (
+        InvalidRUTFormatException,
+        InvalidRUTDVException,
+        UserNotFoundError,
+        UserInactiveException,
+        WrongPasswordException,
+        ValidationError
+    ) as exc:
         raise _handle_error(exc)
 
 

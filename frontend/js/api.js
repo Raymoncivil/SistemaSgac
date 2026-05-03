@@ -44,9 +44,11 @@ async function apiFetch(endpoint, options = {}) {
         const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
         
         if (res.status === 401) {
-            // Token inválido o expirado
-            window.logout();
-            throw new Error("No autorizado");
+            // Token inválido o expirado (solo si no estamos haciendo login)
+            if (!endpoint.includes('/api/auth/login')) {
+                window.logout();
+                throw new Error("No autorizado");
+            }
         }
         
         return res;
@@ -76,15 +78,19 @@ window.login = async function(rut, password) {
             // Redirigir al calendario principal
             window.location.href = "/";
         } else {
-            const errorData = await res.text();
-            console.error("Error del servidor:", errorData);
-            alert("Error al iniciar sesión: " + errorData);
-            if (window.triggerLoginError) window.triggerLoginError();
+            let errorDetail = "ERROR_DESCONOCIDO";
+            try {
+                const errorJson = await res.json();
+                errorDetail = errorJson.detail || errorJson.message || "ERROR_DESCONOCIDO";
+            } catch (e) {
+                // Si no es JSON
+                errorDetail = await res.text();
+            }
+            throw new Error(errorDetail);
         }
     } catch (error) {
         console.error("Excepción en login:", error);
-        alert("No se pudo conectar con el servidor: " + error.message);
-        if (window.triggerLoginError) window.triggerLoginError();
+        throw error;
     }
 };
 

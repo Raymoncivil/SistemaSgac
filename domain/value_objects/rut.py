@@ -5,7 +5,11 @@ No depende de nada externo.
 """
 
 import re
-from ..exceptions import InvalidRUTException
+from ..exceptions import (
+    InvalidRUTException,
+    InvalidRUTFormatException,
+    InvalidRUTDVException
+)
 
 
 class RUT:
@@ -39,7 +43,7 @@ class RUT:
         
         # Validar que tenga al menos 8 caracteres (7 dígitos + 1 DV)
         if len(rut_clean) < 8:
-            raise InvalidRUTException(f"RUT debe tener al menos 8 caracteres, recibido: {rut_str}")
+            raise InvalidRUTFormatException(f"RUT debe tener al menos 8 caracteres, recibido: {rut_str}")
         
         # Separar cuerpo (primeros 7-8 dígitos) y dígito verificador (último carácter)
         body = rut_clean[:-1]
@@ -47,14 +51,14 @@ class RUT:
         
         # El cuerpo debe ser todos dígitos
         if not body.isdigit():
-            raise InvalidRUTException(f"RUT debe contener solo dígitos (excepto DV), recibido: {rut_str}")
+            raise InvalidRUTFormatException(f"RUT debe contener solo dígitos (excepto DV), recibido: {rut_str}")
         
         # Calcular dígito verificador esperado
         dv_expected = RUT._calculate_dv(body)
         
         # Comparar
         if dv_provided != dv_expected:
-            raise InvalidRUTException(
+            raise InvalidRUTDVException(
                 f"RUT inválido. Dígito verificador esperado: {dv_expected}, recibido: {dv_provided} en {rut_str}"
             )
         

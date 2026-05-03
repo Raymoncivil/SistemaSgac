@@ -1097,6 +1097,7 @@ textarea:focus {
 }
 
 .error-shake {
+    opacity: 1;
     animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
 }
 

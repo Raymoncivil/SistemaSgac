@@ -8,8 +8,11 @@ from domain.interfaces.user_repository import IUserRepository
 from domain.interfaces.auth_service import IAuthService
 from domain.value_objects.rut import RUT
 from domain.exceptions import (
-    InvalidRUTException,
+    InvalidRUTFormatException,
+    InvalidRUTDVException,
     UserNotFoundError,
+    UserInactiveException,
+    WrongPasswordException,
     ValidationError
 )
 from ...dtos.auth_dto import LoginRequestDTO, LoginResponseDTO, TokenPayloadDTO
@@ -51,11 +54,8 @@ class AuthenticateUserUseCase:
             ValidationError: Si la contraseña es incorrecta
         """
         
-        # 1. Validar RUT (módulo 11)
-        try:
-            RUT.validate(login_dto.rut)
-        except InvalidRUTException as e:
-            raise ValidationError(f"RUT inválido: {str(e)}")
+        # 1. Validar RUT (módulo 11) - Lanza InvalidRUTFormatException o InvalidRUTDVException directamente
+        RUT.validate(login_dto.rut)
         
         # 2. Limpiar RUT
         rut_clean = RUT.clean_format(login_dto.rut)
@@ -67,11 +67,11 @@ class AuthenticateUserUseCase:
         
         # 4. Verificar que el usuario está activo
         if not user.is_active:
-            raise ValidationError("Usuario inactivo")
+            raise UserInactiveException("Usuario inactivo")
         
         # 5. Validar contraseña
         if not self.auth_service.verify_password(login_dto.password, user.password_hash):
-            raise ValidationError("Contraseña incorrecta")
+            raise WrongPasswordException("Contraseña incorrecta")
         
         # 6. Generar token JWT
         token = self.auth_service.create_token(

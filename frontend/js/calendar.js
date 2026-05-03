@@ -6,7 +6,7 @@ window.currentActivities = [];
 let countdownInterval = null;
 
 // ── Renderiza la cuadrícula de los 30 días de Abril ──────────────────────────
-window.renderCalendar = function(activities) {
+window.renderCalendar = function (activities) {
     window.currentActivities = activities;
     const grid = document.getElementById('calendar-grid');
     if (!grid) return;
@@ -71,7 +71,7 @@ window.renderCalendar = function(activities) {
 };
 
 // ── Chip de actividad en el calendario ───────────────────────────────────────
-window.renderActivityChip = function(activity) {
+window.renderActivityChip = function (activity) {
     const chip = document.createElement('div');
 
     let bgClass = 'chip-low-bg';
@@ -96,14 +96,14 @@ window.renderActivityChip = function(activity) {
 };
 
 // ── Drawer lateral ───────────────────────────────────────────────────────────
-window.openDayModal = function(day, dayActivities) {
+window.openDayModal = function (day, dayActivities) {
     const overlay = document.getElementById('drawer-overlay');
-    const panel   = document.getElementById('drawer-panel');
+    const panel = document.getElementById('drawer-panel');
     const content = document.getElementById('modal-content-list');
-    const title   = document.getElementById('modal-day-title');
+    const title = document.getElementById('modal-day-title');
     if (!overlay || !content || !title) return;
 
-    const daysOfWeek = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+    const daysOfWeek = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
     const dayName = daysOfWeek[new Date(2026, 3, day).getDay()];
     title.textContent = `${dayName} ${day} de Abril`;
     content.innerHTML = '';
@@ -125,13 +125,13 @@ window.openDayModal = function(day, dayActivities) {
     panel.classList.add('active');
 };
 
-window.closeModal = function() {
+window.closeModal = function () {
     document.getElementById('drawer-overlay')?.classList.remove('active');
     document.getElementById('drawer-panel')?.classList.remove('active');
 };
 
 // ── Filtros de prioridad ─────────────────────────────────────────────────────
-window.initPriorityFilter = function() {
+window.initPriorityFilter = function () {
     const btns = document.querySelectorAll('.filter-btn');
     btns.forEach(btn => {
         btn.addEventListener('click', async (e) => {
@@ -212,9 +212,19 @@ window.startCountdown = function (activities) {
         const h = parseInt(parts[0]);
         const m = parseInt(parts[1]);
 
-        const actDate = new Date(2026, 3, act.day_of_april, h, m);
+        /* const actDate = new Date(2026, 3, act.day_of_april, h, m);
         const diff = actDate - now;
 
+        if (diff > 0 && diff < minDiff) { */
+        // Usar fecha de hoy con la hora de la actividad para la cuenta regresiva
+        const today = new Date();
+        const actDate = new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            today.getDate(),
+            parseInt(h), parseInt(m)
+        );
+        const diff = actDate - now;
         if (diff > 0 && diff < minDiff) {
             minDiff = diff;
             nextActivity = { ...act, actDate };
@@ -271,7 +281,7 @@ window.startCountdown = function (activities) {
                 osc.start();
                 osc.stop(ctx.currentTime + 0.4);
 
-            } catch (e) {}
+            } catch (e) { }
 
             if (window.showToast) {
                 const emojiStr = nextActivity.emoji ? `${nextActivity.emoji} ` : '';
@@ -313,7 +323,7 @@ window.startCountdown = function (activities) {
 
 
 // ── Popup actividad destacada ────────────────────────────────────────────────
-window.showDailyPopup = function(activities) {
+/* window.showDailyPopup = function(activities) {
     const today = new Date();
     if (today.getFullYear() !== 2026 || today.getMonth() !== 3) return;
     const currentDay = today.getDate();
@@ -326,7 +336,85 @@ window.showDailyPopup = function(activities) {
             setTimeout(() => popup.classList.add('active'), 800);
         }
     }
+}; */
+
+
+/* window.showDailyPopup = function (activities) {
+    // Mostrar popup de actividad Alta del día actual del mes de abril
+    // independiente del mes real (sistema acotado a abril)
+    const today = new Date();
+    const currentDay = today.getDate();
+
+    // Buscar actividad Alta no completada del día actual
+    // Si hoy es mayo pero hay actividades en abril, mostrar del día 1
+    let targetDay = currentDay;
+    if (today.getMonth() !== 3) {
+        // Fuera de abril: mostrar actividades del día 1 como demo
+        targetDay = 1;
+    }
+
+    const high = activities.find(
+        a => a.day_of_april === targetDay
+            && a.priority_id === 3
+            && !a.completed
+    );
+
+    if (!high) return;
+
+    const popup = document.getElementById('popup-overlay');
+    const popupTitle = document.getElementById('popup-title');
+
+    if (popup && popupTitle) {
+        popupTitle.textContent = `${high.emoji || '⚠️'} ${high.title}`;
+        setTimeout(() => popup.classList.add('active'), 1000);
+    }
 };
+ */
+
+
+window.showDailyPopup = function (activities) {
+    // Buscar cualquier actividad Alta no completada
+    // (el sistema es de abril pero puede usarse en cualquier mes)
+    const today = new Date();
+    const currentDay = today.getDate();
+
+    // Primero buscar en el día actual de abril
+    let high = activities.find(
+        a => a.day_of_april === currentDay
+            && a.priority_id === 3
+            && !a.completed
+    );
+
+    // Si no hay en el día actual, buscar la próxima Alta no completada
+    if (!high) {
+        high = activities.find(
+            a => a.priority_id === 3 && !a.completed
+        );
+    }
+
+    if (!high) return;
+
+    const popup = document.getElementById('popup-overlay');
+    const popupTitle = document.getElementById('popup-title');
+    const popupEmoji = document.getElementById('popup-emoji');
+
+    if (popup && popupTitle) {
+        popupTitle.textContent = high.title;
+        if (popupEmoji) popupEmoji.textContent = high.emoji || '⚠️';
+        setTimeout(() => {
+            popup.classList.add('active');
+        }, 1000);
+    }
+};
+
+
+
+
+
+
+
+
+
 
 // Escape key
 document.addEventListener('keydown', (e) => {
@@ -338,7 +426,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ── CARD DE ACTIVIDAD (con indicador de estado y modal de detalle) ───────────
-window.renderActivityCard = function(act) {
+window.renderActivityCard = function (act) {
     const card = document.createElement('div');
     card.className = act.completed ? 'activity-card card-completed' : 'activity-card';
     card.style.position = 'relative'; // necesario para el indicador absoluto
@@ -355,9 +443,9 @@ window.renderActivityCard = function(act) {
     // Checklist progress
     let checklistHTML = '';
     if (act.checklist && act.checklist.length > 0) {
-        const done  = act.checklist.filter(i => i.done).length;
+        const done = act.checklist.filter(i => i.done).length;
         const total = act.checklist.length;
-        const pct   = Math.round((done / total) * 100);
+        const pct = Math.round((done / total) * 100);
         checklistHTML = `
             <div style="margin-top:0.5rem;">
                 <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;">
@@ -445,7 +533,7 @@ window.renderActivityCard = function(act) {
 };
 
 // ── Toggle completado ────────────────────────────────────────────────────────
-window.toggleActivityDone = async function(act, cardEl) {
+window.toggleActivityDone = async function (act, cardEl) {
     try {
         const updated = await window.updateActivity(act.id, { completed: !act.completed });
         const idx = window.currentActivities.findIndex(a => a.id === act.id);
@@ -466,20 +554,20 @@ window.toggleActivityDone = async function(act, cardEl) {
     }
 };
 // ── Modal de detalle de actividad ────────────────────────────────────────────
-window.showActivityDetail = function(act) {
+window.showActivityDetail = function (act) {
     document.getElementById('activity-detail-modal')?.remove();
 
     let stripColor = '#22C55E';
     if (act.priority_id === 3) stripColor = '#EF4444';
     else if (act.priority_id === 2) stripColor = '#F59E0B';
 
-    const statusColor  = act.completed ? '#22C55E' : '#F59E0B';
-    const statusLabel  = act.completed ? '✅ Realizada' : '🟡 Pendiente';
+    const statusColor = act.completed ? '#22C55E' : '#F59E0B';
+    const statusLabel = act.completed ? '✅ Realizada' : '🟡 Pendiente';
     const priorityName = act.priority_name
         || { 1: 'Baja', 2: 'Media', 3: 'Alta' }[act.priority_id]
         || '';
 
-    const doneCnt  = (act.checklist || []).filter(i => i.done).length;
+    const doneCnt = (act.checklist || []).filter(i => i.done).length;
     const totalCnt = (act.checklist || []).length;
 
     // Crear overlay
@@ -543,8 +631,8 @@ window.showActivityDetail = function(act) {
                            letter-spacing:0.06em;color:var(--text-secondary);margin-bottom:0.5rem;">
                     Checklist
                     ${totalCnt > 0
-                        ? `<span id="checklist-counter" style="font-weight:400;">(${doneCnt}/${totalCnt})</span>`
-                        : ''}
+            ? `<span id="checklist-counter" style="font-weight:400;">(${doneCnt}/${totalCnt})</span>`
+            : ''}
                 </p>
                 <div id="checklist-items-container"></div>
             </div>
@@ -599,7 +687,7 @@ window.showActivityDetail = function(act) {
 
 
             const chk = document.createElement('input');
-            chk.type    = 'checkbox';
+            chk.type = 'checkbox';
             chk.checked = item.done;
             chk.style.cssText = 'width:16px;height:16px;cursor:pointer;accent-color:#4F46E5;flex-shrink:0;';
 
@@ -716,7 +804,7 @@ window.showActivityDetail = function(act) {
 };
 
 // ── Formulario de creación ────────────────────────────────────────────────────
-window.showCreateForm = function(day) {
+window.showCreateForm = function (day) {
     const content = document.getElementById('modal-content-list');
     content.innerHTML = `
     <div class="activity-form" id="activity-form">
@@ -735,9 +823,9 @@ window.showCreateForm = function(day) {
         <label class="form-label">Emoji</label>
         <input id="f-emoji" class="form-input" type="text" maxlength="10" placeholder="📅"/>
         <div class="emoji-shortcuts">
-          ${['📅','✅','⭐','🔥','📌','🎯','💡','⚠️'].map(e =>
-            `<button class="emoji-btn" type="button" onclick="document.getElementById('f-emoji').value='${e}'">${e}</button>`
-          ).join('')}
+          ${['📅', '✅', '⭐', '🔥', '📌', '🎯', '💡', '⚠️'].map(e =>
+        `<button class="emoji-btn" type="button" onclick="document.getElementById('f-emoji').value='${e}'">${e}</button>`
+    ).join('')}
         </div>
       </div>
       <div class="form-group">
@@ -774,9 +862,9 @@ window.showCreateForm = function(day) {
     }));
 
     // Checklist
-    const checkAdd   = content.querySelector('#f-check-add');
+    const checkAdd = content.querySelector('#f-check-add');
     const checkInput = content.querySelector('#f-check-input');
-    const checkList  = content.querySelector('#f-checklist');
+    const checkList = content.querySelector('#f-checklist');
     checkAdd.addEventListener('click', () => {
         const val = checkInput.value.trim();
         if (!val) return;
@@ -796,8 +884,8 @@ window.showCreateForm = function(day) {
     });
 };
 
-window.submitCreateForm = async function(day) {
-    const title    = document.getElementById('f-title').value.trim();
+window.submitCreateForm = async function (day) {
+    const title = document.getElementById('f-title').value.trim();
     const titleErr = document.getElementById('f-title-err');
 
     if (!title) { titleErr.classList.remove('hidden'); return; }
@@ -807,12 +895,12 @@ window.submitCreateForm = async function(day) {
     saveBtn.textContent = 'Guardando...';
     saveBtn.disabled = true;
 
-    const emoji      = document.getElementById('f-emoji').value.trim();
-    const desc       = document.getElementById('f-desc').value.trim();
+    const emoji = document.getElementById('f-emoji').value.trim();
+    const desc = document.getElementById('f-desc').value.trim();
     const selPriority = document.querySelector('.priority-btn.sel');
-    const priorityId  = selPriority ? Number(selPriority.dataset.pid) : 1;
-    const timeVal     = document.getElementById('f-time').value || null;
-    const checklist   = Array.from(
+    const priorityId = selPriority ? Number(selPriority.dataset.pid) : 1;
+    const timeVal = document.getElementById('f-time').value || null;
+    const checklist = Array.from(
         document.querySelectorAll('#f-checklist .checklist-item-row span')
     ).map(span => ({ text: span.textContent, done: false }));
 
@@ -831,13 +919,13 @@ window.submitCreateForm = async function(day) {
 };
 
 // ── Formulario de edición ─────────────────────────────────────────────────────
-window.showEditForm = function(activity) {
+window.showEditForm = function (activity) {
     window.showCreateForm(activity.day_of_april);
 
     document.getElementById('f-title').value = activity.title || '';
-    document.getElementById('f-time').value  = activity.time || '';
+    document.getElementById('f-time').value = activity.time || '';
     document.getElementById('f-emoji').value = activity.emoji || '';
-    document.getElementById('f-desc').value  = activity.description || '';
+    document.getElementById('f-desc').value = activity.description || '';
 
     document.querySelectorAll('.priority-btn').forEach(b => {
         b.classList.toggle('sel', Number(b.dataset.pid) === activity.priority_id);
@@ -856,8 +944,8 @@ window.showEditForm = function(activity) {
     saveBtn.onclick = () => window.submitUpdateForm(activity.id, activity.day_of_april);
 };
 
-window.submitUpdateForm = async function(activityId, day) {
-    const title    = document.getElementById('f-title').value.trim();
+window.submitUpdateForm = async function (activityId, day) {
+    const title = document.getElementById('f-title').value.trim();
     const titleErr = document.getElementById('f-title-err');
 
     if (!title) { titleErr.classList.remove('hidden'); return; }
@@ -867,12 +955,12 @@ window.submitUpdateForm = async function(activityId, day) {
     saveBtn.textContent = 'Guardando...';
     saveBtn.disabled = true;
 
-    const emoji       = document.getElementById('f-emoji').value.trim();
-    const desc        = document.getElementById('f-desc').value.trim();
+    const emoji = document.getElementById('f-emoji').value.trim();
+    const desc = document.getElementById('f-desc').value.trim();
     const selPriority = document.querySelector('.priority-btn.sel');
-    const priorityId  = selPriority ? Number(selPriority.dataset.pid) : 1;
-    const timeVal     = document.getElementById('f-time').value || null;
-    const checklist   = Array.from(
+    const priorityId = selPriority ? Number(selPriority.dataset.pid) : 1;
+    const timeVal = document.getElementById('f-time').value || null;
+    const checklist = Array.from(
         document.querySelectorAll('#f-checklist .checklist-item-row span')
     ).map(span => ({ text: span.textContent, done: false }));
 
@@ -892,7 +980,7 @@ window.submitUpdateForm = async function(activityId, day) {
 };
 
 // ── Confirmación de eliminación ───────────────────────────────────────────────
-window.confirmDelete = function(activityId, cardEl) {
+window.confirmDelete = function (activityId, cardEl) {
     const act = window.currentActivities.find(a => a.id === activityId);
     cardEl.innerHTML = `
       <div class="confirm-delete-box">
@@ -907,27 +995,27 @@ window.confirmDelete = function(activityId, cardEl) {
       </div>`;
 
     cardEl.querySelector('#btn-confirm-del').addEventListener('click', async () => {
-    try {
-        await window.deleteActivity(activityId);
-        cardEl.remove();
-        window.showToast('🗑️ Actividad eliminada', 'success');
-        // Recargar desde API y actualizar drawer
-        const fresh = await window.getAprilActivities();
-        window.currentActivities = fresh;
-        if (act) {
-            const dayActs = fresh.filter(a => a.day_of_april === act.day_of_april);
-            window.updateDayCell(act.day_of_april, dayActs);
-            // Reabrir el drawer con datos frescos
-            window.openDayModal(act.day_of_april, dayActs);
+        try {
+            await window.deleteActivity(activityId);
+            cardEl.remove();
+            window.showToast('🗑️ Actividad eliminada', 'success');
+            // Recargar desde API y actualizar drawer
+            const fresh = await window.getAprilActivities();
+            window.currentActivities = fresh;
+            if (act) {
+                const dayActs = fresh.filter(a => a.day_of_april === act.day_of_april);
+                window.updateDayCell(act.day_of_april, dayActs);
+                // Reabrir el drawer con datos frescos
+                window.openDayModal(act.day_of_april, dayActs);
+            }
+        } catch (e) {
+            window.showToast('❌ Error al eliminar', 'danger');
+            if (act) {
+                const newCard = window.renderActivityCard(act);
+                cardEl.replaceWith(newCard);
+            }
         }
-    } catch (e) {
-        window.showToast('❌ Error al eliminar', 'danger');
-        if (act) {
-            const newCard = window.renderActivityCard(act);
-            cardEl.replaceWith(newCard);
-        }
-    }
-});   
+    });
 
     cardEl.querySelector('#btn-cancel-del').addEventListener('click', () => {
         if (act) {
@@ -938,7 +1026,7 @@ window.confirmDelete = function(activityId, cardEl) {
 };
 
 // ── Actualizar chips del día en el calendario ─────────────────────────────────
-window.updateDayCell = function(day, activities) {
+window.updateDayCell = function (day, activities) {
     const cell = document.querySelector(`.day-cell[data-day="${day}"]`);
     if (!cell) return;
 
