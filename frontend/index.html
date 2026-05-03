@@ -142,11 +142,33 @@
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             // Manejo del Tema
+            /*  const themeBtn = document.getElementById('theme-toggle');
+             themeBtn.addEventListener('click', () => {
+                 const current = document.body.getAttribute('data-theme');
+                 document.body.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+             }); */
+
+
             const themeBtn = document.getElementById('theme-toggle');
+
+            // Cargar tema guardado al iniciar
+            const savedTheme = localStorage.getItem('sgac-theme') || 'light';
+            document.body.setAttribute('data-theme', savedTheme);
+            themeBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+
+            // Toggle al hacer clic
             themeBtn.addEventListener('click', () => {
                 const current = document.body.getAttribute('data-theme');
-                document.body.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.body.setAttribute('data-theme', next);
+                localStorage.setItem('sgac-theme', next);
+                themeBtn.textContent = next === 'dark' ? '☀️' : '🌙';
             });
+
+
+
+
+
 
             // Manejo del Logout
             const logoutBtn = document.getElementById('btn-logout');
